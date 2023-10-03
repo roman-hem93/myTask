@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,12 +23,24 @@ class MainActivity : AppCompatActivity() {
         val dbManager : DateBaseManager = DateBaseManager()
         val tasks : ArrayList<DataTask> = dbManager.getTasks()
 
+        val rvTasks : RecyclerView = findViewById(R.id.rvTasks)
+
+
+        if (tasks.size == 0) {
+            // выполняем вывод инфы об отсутствии задач
+            Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
+        } else {
+            // определяем и настраиваем RecyclerView
+            val adapter = TasksRecyclerViewAdapter(this as Context, tasks)
+            rvTasks.hasFixedSize()
+            rvTasks.layoutManager = LinearLayoutManager(this)
+            rvTasks.adapter = adapter
+        }
 
 
 
 
-
-
+/*
         val tvTitle : TextView = findViewById(R.id.title)
         val tvDate : TextView = findViewById(R.id.date)
         val tvMessage : TextView = findViewById(R.id.message)
@@ -49,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         bt2.setOnClickListener () {
 
         }
+        */
     }
 
 

@@ -16,10 +16,10 @@ class DateBaseManager {
 
 
     private fun testAddTasks (tasks : ArrayList<DataTask>) {
-        val task1 : DataTask = DataTask("Заголовок 1", "Описание", "дата текстом")
-        val task2 : DataTask = DataTask("Заголовок 2", "Описание", "дата текстом")
-        val task3 : DataTask = DataTask("Заголовок 3", "Описание", "дата текстом")
-        val task4 : DataTask = DataTask("Заголовок 4", "Описание", "дата текстом")
+        val task1 : DataTask = DataTask("Заголовок 1", "Описание", "дата текстом", 1)
+        val task2 : DataTask = DataTask("Заголовок 2", "Описание", "дата текстом", 0)
+        val task3 : DataTask = DataTask("Заголовок 3", "Описание", "дата текстом", 1)
+        val task4 : DataTask = DataTask("Заголовок 4", "Описание", "дата текстом", 0)
 
         tasks.add(task1)
         tasks.add(task2)

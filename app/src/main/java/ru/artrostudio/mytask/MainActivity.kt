@@ -14,9 +14,6 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             // говорим адаптеру "обкови всё" - не рекомендуется
             //rvTasks.adapter?.notifyDataSetChanged()
 
-            dbManager.saveTasks(tasks) {}
+            dbManager.saveTasks(tasks)
 
 
             windowTasks.visibility = View.VISIBLE

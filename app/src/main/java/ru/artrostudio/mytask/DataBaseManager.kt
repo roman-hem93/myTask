@@ -17,24 +17,24 @@ class DateBaseManager(_context: Context) {
     private val tasks : ArrayList<DataTask> = ArrayList<DataTask>()
 
     fun getTasks () : ArrayList<DataTask> {
-        testAddTasks(tasks)
+        //testAddTasks(tasks)
 
         // запрашиваем из текстового файла JSON строку
-        //val str = sp.getString(STR_KEY, "")
+        val str = sp.getString(STR_KEY, "[]")
         // переводим строку в список
-        //Log.i("myTask.BD","Достали из файла строку с задачами: $str")
-        ///val array = Json.decodeFromString<ArrayList<DataTask>>(str.toString())
-        return tasks
+        Log.i("myTask.BD","Достали из файла строку с задачами: $str")
+        val array = Json.decodeFromString<ArrayList<DataTask>>(str.toString())
+        return array
     }
 
-    fun saveTasks (array : ArrayList<DataTask>, callback : ()->Unit) {
+    fun saveTasks (array : ArrayList<DataTask>) {
         // преобразуем полученный список в JSON
+
         val str = Json.encodeToString(array)
         // сохраняем строку в текстовый файл
         Log.i("myTask.BD","Сохраняем в БД задачи: $str")
         editor.putString(STR_KEY, str).apply()
-        // вызываем колбэк
-        callback()
+
     }
 
 

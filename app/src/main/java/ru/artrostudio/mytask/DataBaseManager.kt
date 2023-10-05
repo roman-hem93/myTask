@@ -1,7 +1,16 @@
 package ru.artrostudio.mytask
 
-class DateBaseManager {
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 
+class DateBaseManager(_context : Context) {
+
+    private val context : Context = _context
+    private val sp = context.getSharedPreferences("PreferencesName", Context.MODE_PRIVATE)
+    private val editor : SharedPreferences.Editor = sp.edit()
+
+    private val STR_KEY : String = "BD_TASKS"
     private val tasks : ArrayList<DataTask> = ArrayList<DataTask>()
 
     fun getTasks () : ArrayList<DataTask> {
@@ -12,6 +21,10 @@ class DateBaseManager {
 
     fun saveTasks (tasks : ArrayList<DataTask>, callback : ()->Unit) {
 
+        Log.d("myTask.BD",tasks.toString())
+
+        //var text : String? = textInput.text.toString()
+        //editor.putString(STR_KEY, text).apply()
     }
 
 
@@ -29,12 +42,7 @@ class DateBaseManager {
 
 
     /*
-    lateinit var sp : SharedPreferences
-    lateinit var editor : SharedPreferences.Editor
-    val STR_KEY : String = "Name"
 
-    sp = getSharedPreferences("PreferencesName", Context.MODE_PRIVATE)
-    editor = sp.edit()
 
     SAVE
     var text : String? = textInput.text.toString()

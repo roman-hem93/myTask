@@ -62,7 +62,11 @@ class MainActivity : AppCompatActivity() {
 
         val buttonAddTaskSave : Button = findViewById(R.id.addTaskSave)
         buttonAddTaskSave.setOnClickListener() {
-            tasks.add(DataTask(editTextAddTaskTitle.text.toString(), editTextAddTaskMessage.text.toString(), editTextAddTaskDate.text.toString(), 0))
+            tasks.add(DataTask(
+                editTextAddTaskTitle.text.toString(),
+                editTextAddTaskMessage.text.toString(),
+                editTextAddTaskDate.text.toString(),
+                0))
 
             editTextAddTaskDate.setText("")
             editTextAddTaskTitle.setText("")
@@ -74,7 +78,6 @@ class MainActivity : AppCompatActivity() {
             //rvTasks.adapter?.notifyDataSetChanged()
 
             dbManager.saveTasks(tasks)
-
 
             windowTasks.visibility = View.VISIBLE
             windowAddTask.visibility = View.GONE

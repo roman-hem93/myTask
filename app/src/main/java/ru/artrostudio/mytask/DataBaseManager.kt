@@ -34,9 +34,7 @@ class DateBaseManager(_context: Context) {
         // сохраняем строку в текстовый файл
         Log.i("myTask.BD","Сохраняем в БД задачи: $str")
         editor.putString(STR_KEY, str).apply()
-
     }
-
 
     private fun testAddTasks (array : ArrayList<DataTask>) {
         val task1 : DataTask = DataTask("Заголовок 1", "Описание", "дата текстом", 1)
@@ -49,17 +47,4 @@ class DateBaseManager(_context: Context) {
         array.add(task3)
         array.add(task4)
     }
-
-
-    /*
-
-
-    SAVE
-    var text : String? = textInput.text.toString()
-    editor.putString(STR_KEY, text).apply()
-
-    GET
-    text = sp.getString(STR_KEY, "")
-
-     */
 }

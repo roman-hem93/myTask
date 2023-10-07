@@ -21,27 +21,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.i("myTask.System","Приложение запустилось")
+        Log.i("Developer.System","Приложение запустилось")
 
         //окна
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val windowDate : ConstraintLayout = findViewById(R.id.windowDate)
 
         val dbManager : DateBaseManager = DateBaseManager(this)
         val tasks : ArrayList<DataTask> = dbManager.getTasks()
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
-
+        // определяем и настраиваем RecyclerView
+        val adapter = TasksRecyclerViewAdapter(this as Context, tasks)
+        rvTasks.hasFixedSize()
+        rvTasks.layoutManager = LinearLayoutManager(this)
+        rvTasks.adapter = adapter
 
         if (tasks.size == 0) {
             // выполняем вывод инфы об отсутствии задач
             Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
-        } else {
-            // определяем и настраиваем RecyclerView
-            val adapter = TasksRecyclerViewAdapter(this as Context, tasks)
-            rvTasks.hasFixedSize()
-            rvTasks.layoutManager = LinearLayoutManager(this)
-            rvTasks.adapter = adapter
         }
 
         val buttonTasksAdd : Button = findViewById(R.id.tasksAdd)
@@ -56,12 +55,25 @@ class MainActivity : AppCompatActivity() {
             windowAddTask.visibility = View.GONE
         }
 
+        val buttonDateCancel : Button = findViewById(R.id.dateCancel)
+        buttonDateCancel.setOnClickListener() {
+            windowTasks.visibility = View.VISIBLE
+            windowDate.visibility = View.GONE
+        }
+
+        val buttonTasksDate : Button = findViewById(R.id.tasksDate)
+        buttonTasksDate.setOnClickListener() {
+            windowTasks.visibility = View.GONE
+            windowDate.visibility = View.VISIBLE
+        }
+
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
 
         val buttonAddTaskSave : Button = findViewById(R.id.addTaskSave)
         buttonAddTaskSave.setOnClickListener() {
+
             tasks.add(DataTask(
                 editTextAddTaskTitle.text.toString(),
                 editTextAddTaskMessage.text.toString(),

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MyDatePickerDialogTheme" parent="android:Theme.Material.Light.Dialog">
+        <item name="android:datePickerStyle">@style/MyDatePickerStyle</item>
+        <item name="android:textColorPrimaryInverse">#0f0</item> <!-- header date, month color && calendar text highlight color -->
+        <item name="android:textColorSecondaryInverse">#0f0</item> <!-- header year color -->
+        <item name="android:colorAccent">#f0f</item> <!-- button color -->
+    </style>
+
+    <style name="MyDatePickerStyle" parent="@android:style/Widget.Material.Light.DatePicker">
+        <item name="android:headerBackground">#f0f</item> <!-- header background color -->
+    </style>
+
+</resources>

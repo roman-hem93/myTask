@@ -95,7 +95,6 @@ class MainActivity : AppCompatActivity() {
             val NOTIFICATION_ID = 101
             val CHANNEL_ID = "channelID"
 
-
             // создание канала уведомлений. Должно быть создано до запуска уведомления. Книжка рекомендует создавать при запуске приложения
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val name = "channel_name"
@@ -125,8 +124,6 @@ class MainActivity : AppCompatActivity() {
             }
             val snoozePendingIntent: PendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_MUTABLE)
 
-
-
             val builder = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.icon_notification)
                 .setContentTitle("Напоминание")
@@ -140,41 +137,6 @@ class MainActivity : AppCompatActivity() {
             with(NotificationManagerCompat.from(this)) {
                 notify(NOTIFICATION_ID, builder.build())
             }
-
-
-            /*
-
-            val notificationManager = NotificationManagerCompat.from(this)
-
-            // проверка наличия резрешения
-            /*
-            val permission = android.Manifest.permission.POST_NOTIFICATIONS
-            val pm : PackageManager = getPackageManager()
-            val hasPerm : Int = pm.checkPermission(permission, getPackageName())
-            if (hasPerm != PackageManager.PERMISSION_GRANTED) {
-                notificationManager.notify(NOTIFICATION_ID, builder.build())
-            }
-            */
-            notificationManager.notify(NOTIFICATION_ID, builder.build())
-
-
-            // альтернативный вариант
-            val channel = NotificationChannel("105", "555", NotificationManager.IMPORTANCE_DEFAULT)
-
-            val nm : NotificationManager = getSystemService(NotificationManager::class.java)
-            nm.createNotificationChannel(channel)
-
-            val builder2 = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.icon_notification)
-                .setContentTitle("Напоминание")
-                .setContentText("Пора покормить кота")
-                //.setAutoCancel(true)
-                //.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .build()
-            nm.notify(102,builder2)
-
-*/
-
 
             Toast.makeText(this, "Уведомление создано",Toast.LENGTH_LONG).show()
         }

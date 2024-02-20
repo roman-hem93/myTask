@@ -58,22 +58,20 @@ class MainActivity : AppCompatActivity() {
             windowAddTask.visibility = View.GONE
         }
 
-        //val buttonDateCancel : Button = findViewById(R.id.dateCancel)
-        val buttonDateCancel : Button = windowSetDate.findViewById(R.id.cancel)
-        buttonDateCancel.setOnClickListener() {
+        val buttonSetDateCancel : Button = findViewById(R.id.setDateCancel)
+        buttonSetDateCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
             windowSetDate.visibility = View.GONE
         }
 
-        val buttonSetTime : Button = findViewById(R.id.setTime)
-        buttonSetTime.setOnClickListener() {
+        val buttonSetDateSetTime : Button = findViewById(R.id.setDateSetTime)
+        buttonSetDateSetTime.setOnClickListener() {
             windowSetTime.visibility = View.VISIBLE
             windowSetDate.visibility = View.GONE
         }
 
-        //val buttonTimeCancel : Button = findViewById(R.id.timeCancel)
-        val buttonTimeCancel : Button = windowSetTime.findViewById(R.id.cancel)
-        buttonTimeCancel.setOnClickListener() {
+        val buttonSetTimeCancel : Button = findViewById(R.id.setTimeCancel)
+        buttonSetTimeCancel.setOnClickListener() {
             windowSetDate.visibility = View.VISIBLE
             windowSetTime.visibility = View.GONE
         }
@@ -84,6 +82,9 @@ class MainActivity : AppCompatActivity() {
             val timeView = findViewById<TimePicker>(R.id.timePicker)
 
             timeView.setIs24HourView(true)
+            //dateView.
+            //dateView.month =
+            //dateView.year =
 
             windowTasks.visibility = View.GONE
             windowSetDate.visibility = View.VISIBLE

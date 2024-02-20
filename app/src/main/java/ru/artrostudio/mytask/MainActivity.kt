@@ -26,7 +26,8 @@ class MainActivity : AppCompatActivity() {
         //окна
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
-        val windowDate : ConstraintLayout = findViewById(R.id.windowDate)
+        val windowSetDate : ConstraintLayout = findViewById(R.id.windowSetDate)
+        val windowSetTime : ConstraintLayout = findViewById(R.id.windowSetTime)
 
         val dbManager : DateBaseManager = DateBaseManager(this)
         val tasks : ArrayList<DataTask> = dbManager.getTasks()
@@ -57,10 +58,24 @@ class MainActivity : AppCompatActivity() {
             windowAddTask.visibility = View.GONE
         }
 
-        val buttonDateCancel : Button = findViewById(R.id.dateCancel)
+        //val buttonDateCancel : Button = findViewById(R.id.dateCancel)
+        val buttonDateCancel : Button = windowSetDate.findViewById(R.id.cancel)
         buttonDateCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
-            windowDate.visibility = View.GONE
+            windowSetDate.visibility = View.GONE
+        }
+
+        val buttonSetTime : Button = findViewById(R.id.setTime)
+        buttonSetTime.setOnClickListener() {
+            windowSetTime.visibility = View.VISIBLE
+            windowSetDate.visibility = View.GONE
+        }
+
+        //val buttonTimeCancel : Button = findViewById(R.id.timeCancel)
+        val buttonTimeCancel : Button = windowSetTime.findViewById(R.id.cancel)
+        buttonTimeCancel.setOnClickListener() {
+            windowSetDate.visibility = View.VISIBLE
+            windowSetTime.visibility = View.GONE
         }
 
         val buttonTasksDate : Button = findViewById(R.id.tasksDate)
@@ -71,7 +86,7 @@ class MainActivity : AppCompatActivity() {
             timeView.setIs24HourView(true)
 
             windowTasks.visibility = View.GONE
-            windowDate.visibility = View.VISIBLE
+            windowSetDate.visibility = View.VISIBLE
         }
 
         val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)

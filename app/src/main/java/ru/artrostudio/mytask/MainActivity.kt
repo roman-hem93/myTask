@@ -28,6 +28,8 @@ class MainActivity : AppCompatActivity() {
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val windowSetDate : ConstraintLayout = findViewById(R.id.windowSetDate)
         val windowSetTime : ConstraintLayout = findViewById(R.id.windowSetTime)
+        val windowSetting : ConstraintLayout = findViewById(R.id.windowSetting)
+        val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
 
         val dbManager : DateBaseManager = DateBaseManager(this)
         val tasks : ArrayList<DataTask> = dbManager.getTasks()
@@ -126,6 +128,14 @@ class MainActivity : AppCompatActivity() {
 
             windowTasks.visibility = View.VISIBLE
             windowAddTask.visibility = View.GONE
+        }
+
+        fun openTask(id: Int) {
+
+            // тут добавь наполнение окна
+
+            windowAddTask.visibility = View.VISIBLE
+            windowTasks.visibility = View.GONE
         }
 
         fun myAlert() {

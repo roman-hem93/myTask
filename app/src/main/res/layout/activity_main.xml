@@ -19,7 +19,7 @@
 
     <include
         android:id="@+id/windowAddTask"
-        layout="@layout/window_add_task"
+        layout="@layout/window_task"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

@@ -3,4 +3,4 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class DataTask (val title : String, val message : String, val date : String, val status : Int)
+data class DataTask (var id : Int, var title : String, var message : String, var date : String, var status : Int)

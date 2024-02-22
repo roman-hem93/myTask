@@ -17,6 +17,10 @@ import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
 
+    //lateinit var context: MainActivity
+    lateinit var tasks: ArrayList<DataTask>
+    lateinit var dbManager: DateBaseManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -24,21 +28,37 @@ class MainActivity : AppCompatActivity() {
         Log.i("Developer.System","Приложение запустилось")
 
         //окна
+        //context = this
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val windowSetDate : ConstraintLayout = findViewById(R.id.windowSetDate)
         val windowSetTime : ConstraintLayout = findViewById(R.id.windowSetTime)
         val windowSetting : ConstraintLayout = findViewById(R.id.windowSetting)
         val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
+        val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
+        val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
+        val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
 
-        val dbManager : DateBaseManager = DateBaseManager(this)
-        val tasks : ArrayList<DataTask> = dbManager.getTasks()
+        val buttonTasksAdd : Button = findViewById(R.id.tasksAdd)
+        val buttonAddTaskSave : Button = findViewById(R.id.addTaskSave)
+        val buttonAddTaskDelete : Button = findViewById(R.id.addTaskDelete)
+        val buttonAddTaskCancel : Button = findViewById(R.id.addTaskCancel)
+        val buttonSetDateCancel : Button = findViewById(R.id.setDateCancel)
+        val buttonSetDateSetTime : Button = findViewById(R.id.setDateSetTime)
+        val buttonSetTimeCancel : Button = findViewById(R.id.setTimeCancel)
+        val buttonTasksDate : Button = findViewById(R.id.tasksDate)
+        val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
+
+        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+
+        dbManager = DateBaseManager(this)
+        tasks = dbManager.getTasks()
 
         val notifications : Notifications = Notifications(this)
 
-        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+
         // определяем и настраиваем RecyclerView
-        val adapter = TasksRecyclerViewAdapter(this as Context, tasks)
+        val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Int -> openTask(id)}, {id: Int -> setStatus(id)})
         rvTasks.hasFixedSize()
         rvTasks.layoutManager = LinearLayoutManager(this)
         rvTasks.adapter = adapter
@@ -48,37 +68,46 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
         }
 
-        val buttonTasksAdd : Button = findViewById(R.id.tasksAdd)
+
         buttonTasksAdd.setOnClickListener() {
-            windowTasks.visibility = View.GONE
+            editTextAddTaskDate.setText("")
+            editTextAddTaskTitle.setText("")
+            editTextAddTaskMessage.setText("")
+
+            buttonAddTaskSave.setOnClickListener() {
+                saveTask(-1)
+            }
+            buttonAddTaskDelete.visibility = View.GONE
+
             windowAddTask.visibility = View.VISIBLE
+            windowTasks.visibility = View.GONE
         }
 
-        val buttonAddTaskCancel : Button = findViewById(R.id.addTaskCancel)
+
         buttonAddTaskCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
             windowAddTask.visibility = View.GONE
         }
 
-        val buttonSetDateCancel : Button = findViewById(R.id.setDateCancel)
+
         buttonSetDateCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
             windowSetDate.visibility = View.GONE
         }
 
-        val buttonSetDateSetTime : Button = findViewById(R.id.setDateSetTime)
+
         buttonSetDateSetTime.setOnClickListener() {
             windowSetTime.visibility = View.VISIBLE
             windowSetDate.visibility = View.GONE
         }
 
-        val buttonSetTimeCancel : Button = findViewById(R.id.setTimeCancel)
+
         buttonSetTimeCancel.setOnClickListener() {
             windowSetDate.visibility = View.VISIBLE
             windowSetTime.visibility = View.GONE
         }
 
-        val buttonTasksDate : Button = findViewById(R.id.tasksDate)
+
         buttonTasksDate.setOnClickListener() {
             val dateView = findViewById<DatePicker>(R.id.datePicker)
             val timeView = findViewById<TimePicker>(R.id.timePicker)
@@ -92,56 +121,140 @@ class MainActivity : AppCompatActivity() {
             windowSetDate.visibility = View.VISIBLE
         }
 
-        val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
+
         buttonTasksNotification.setOnClickListener() {
-
             notifications.setNotification()
-
-
-
             Toast.makeText(this, "Уведомление создано",Toast.LENGTH_LONG).show()
         }
 
+
+    }
+
+    fun openTask(id: Int) {
+        val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
+        val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
-
         val buttonAddTaskSave : Button = findViewById(R.id.addTaskSave)
+        val buttonAddTaskDelete : Button = findViewById(R.id.addTaskDelete)
+
+
         buttonAddTaskSave.setOnClickListener() {
-
-            tasks.add(DataTask(
-                editTextAddTaskTitle.text.toString(),
-                editTextAddTaskMessage.text.toString(),
-                editTextAddTaskDate.text.toString(),
-                0))
-
-            editTextAddTaskDate.setText("")
-            editTextAddTaskTitle.setText("")
-            editTextAddTaskMessage.setText("")
-
-            // говорим адаптеру, что добавился новый элемент в массив и он на последнем месте
-            rvTasks.adapter?.notifyItemInserted(tasks.size-1)
-            // говорим адаптеру "обкови всё" - не рекомендуется
-            //rvTasks.adapter?.notifyDataSetChanged()
-
-            dbManager.saveTasks(tasks)
-
-            windowTasks.visibility = View.VISIBLE
-            windowAddTask.visibility = View.GONE
+            saveTask(id)
+        }
+        buttonAddTaskDelete.visibility = View.VISIBLE
+        buttonAddTaskDelete.setOnClickListener() {
+            deleteTask(id)
         }
 
-        fun openTask(id: Int) {
-
-            // тут добавь наполнение окна
-
-            windowAddTask.visibility = View.VISIBLE
-            windowTasks.visibility = View.GONE
+        // ищем напоминалку id
+        for(item in tasks) {
+            if (item.id == id) {
+                editTextAddTaskDate.setText(item.date)
+                editTextAddTaskTitle.setText(item.title)
+                editTextAddTaskMessage.setText(item.message)
+            }
         }
 
-        fun myAlert() {
-            Toast.makeText(this, "Тест",Toast.LENGTH_LONG).show()
+        windowAddTask.visibility = View.VISIBLE
+        windowTasks.visibility = View.GONE
+    }
+
+    fun setStatus(id: Int) {
+
+        var newStatus = 0
+        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+
+        // ищем напоминалку id
+        for(item in tasks) {
+            if (item.id == id) {
+                val oldSt = item.status
+                if (oldSt == 0) newStatus = 1
+                item.status = newStatus
+            }
         }
 
+        dbManager.saveTasks(tasks)
+
+        // говорим адаптеру, что нужно обновить нужную вьюху
+        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+        // говорим адаптеру "обнови всё" - не рекомендуется
+        rvTasks.adapter?.notifyDataSetChanged()
+    }
+
+    fun saveTask(id: Int) {
+        val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
+        val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
+        val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
+        val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
+        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+
+        if (id == -1) { // новая напоминалка
+
+            // определяем наибольший id в базе
+            var idNew = 0
+            for(item in tasks) {
+                if (item.id >= idNew) idNew = item.id + 1
+            }
+
+            tasks.add(
+                DataTask(
+                    idNew,
+                    editTextAddTaskTitle.text.toString(),
+                    editTextAddTaskMessage.text.toString(),
+                    editTextAddTaskDate.text.toString(),
+                    0
+                )
+            )
+        } else { // редактируем напоминалку id
+            for(item in tasks) {
+                if (item.id == id) {
+                    item.title = editTextAddTaskTitle.text.toString()
+                    item.message = editTextAddTaskMessage.text.toString()
+                    item.date = editTextAddTaskDate.text.toString()
+                }
+            }
+        }
+
+        // говорим адаптеру, что нужно обновить нужную вьюху
+        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+        // говорим адаптеру "обнови всё" - не рекомендуется
+        rvTasks.adapter?.notifyDataSetChanged()
+
+        dbManager.saveTasks(tasks)
+
+        windowTasks.visibility = View.VISIBLE
+        windowAddTask.visibility = View.GONE
+    }
+
+    fun deleteTask(id: Int) {
+        val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
+        val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+
+        // ищем напоминалку id
+        for(item in tasks) {
+            if (item.id == id) {
+                tasks.remove(item)
+                break
+            }
+        }
+
+        // говорим адаптеру, что нужно обновить нужную вьюху
+        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+        // говорим адаптеру "обнови всё" - не рекомендуется
+        rvTasks.adapter?.notifyDataSetChanged()
+
+        dbManager.saveTasks(tasks)
+
+        windowTasks.visibility = View.VISIBLE
+        windowAddTask.visibility = View.GONE
+    }
+
+    fun myAlert() {
+        Toast.makeText(this, "Тест",Toast.LENGTH_LONG).show()
     }
 
 

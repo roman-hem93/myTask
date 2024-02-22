@@ -6,11 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 
-class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>) : RecyclerView.Adapter<TasksRecyclerViewAdapter.ViewHolder>() {
+class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>, _funOpenTask: (Int) -> Unit, _funSetStatus: (Int) -> Unit) : RecyclerView.Adapter<TasksRecyclerViewAdapter.ViewHolder>() {
 
     var context = _context
+    var funOpenTask = _funOpenTask
+    var funSetStatus = _funSetStatus
     var array = _array
     var icons = arrayOf(   // массив с иконками галок
         R.drawable.check1,
@@ -22,6 +25,8 @@ class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>) :
 
     // создаёт вьюху - отдельный элемент списка
     inner class ViewHolder(view : View) : RecyclerView.ViewHolder(view) {
+        val layoutStatus = view.findViewById<ConstraintLayout>(R.id.layoutStatus) // контейнер с картинкой
+        val layoutTitle = view.findViewById<ConstraintLayout>(R.id.layoutTitle) // контейнер с заголовком и датой
         val title = view.findViewById<TextView>(R.id.titleTask) // имя прибора учёта
         val date = view.findViewById<TextView>(R.id.dateTask) // показание
         val check = view.findViewById<ImageView>(R.id.checkTask) // расход
@@ -30,8 +35,14 @@ class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>) :
             title.text = listItem.title
             date.text = listItem.date
             check.setImageResource(icons[listItem.status])
-        }
+            layoutTitle.setOnClickListener() {
+                funOpenTask(listItem.id)
+            }
+            layoutStatus.setOnClickListener() {
+                funSetStatus(listItem.id)
+            }
 
+        }
     }
 
     // опиши

@@ -2,7 +2,8 @@ package ru.artrostudio.mytask
 
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -11,6 +12,7 @@ import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.TimePicker
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +37,8 @@ class MainActivity : AppCompatActivity() {
         val windowSetTime : ConstraintLayout = findViewById(R.id.windowSetTime)
         val windowSetting : ConstraintLayout = findViewById(R.id.windowSetting)
         val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
+        val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
+
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
@@ -55,6 +59,50 @@ class MainActivity : AppCompatActivity() {
         tasks = dbManager.getTasks()
 
         val notifications : Notifications = Notifications(this)
+
+
+
+
+
+
+
+
+        // попытки сделать что-то с SQLite, пока нафиг
+
+        val db : SQLiteDatabase = baseContext.openOrCreateDatabase("app.db", MODE_PRIVATE, null)
+        db.execSQL("CREATE TABLE IF NOT EXISTS users (name TEXT, age INTEGER, UNIQUE(name))")
+        db.execSQL("INSERT OR IGNORE INTO users VALUES ('Tom Smith', 23), ('John Dow', 31);")
+
+        val query : Cursor = db.rawQuery("SELECT * FROM users;", null)
+        if(query.moveToFirst()) {
+
+            val name : String = query.getString(0)
+            val age : Int = query.getInt(1)
+
+            Log.i("Developer.BD","Тест SQL: $name и $age")
+        }
+
+        query.close()
+        db.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         // определяем и настраиваем RecyclerView
@@ -81,17 +129,20 @@ class MainActivity : AppCompatActivity() {
 
             windowAddTask.visibility = View.VISIBLE
             windowTasks.visibility = View.GONE
+            bottomMenu.visibility = View.GONE
         }
 
 
         buttonAddTaskCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
+            bottomMenu.visibility = View.VISIBLE
             windowAddTask.visibility = View.GONE
         }
 
 
         buttonSetDateCancel.setOnClickListener() {
             windowTasks.visibility = View.VISIBLE
+            bottomMenu.visibility = View.VISIBLE
             windowSetDate.visibility = View.GONE
         }
 
@@ -118,6 +169,7 @@ class MainActivity : AppCompatActivity() {
             //dateView.year =
 
             windowTasks.visibility = View.GONE
+            bottomMenu.visibility = View.GONE
             windowSetDate.visibility = View.VISIBLE
         }
 
@@ -133,6 +185,7 @@ class MainActivity : AppCompatActivity() {
     fun openTask(id: Int) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
@@ -159,6 +212,7 @@ class MainActivity : AppCompatActivity() {
 
         windowAddTask.visibility = View.VISIBLE
         windowTasks.visibility = View.GONE
+        bottomMenu.visibility = View.GONE
     }
 
     fun setStatus(id: Int) {
@@ -186,6 +240,7 @@ class MainActivity : AppCompatActivity() {
     fun saveTask(id: Int) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
@@ -226,12 +281,14 @@ class MainActivity : AppCompatActivity() {
         dbManager.saveTasks(tasks)
 
         windowTasks.visibility = View.VISIBLE
+        bottomMenu.visibility = View.VISIBLE
         windowAddTask.visibility = View.GONE
     }
 
     fun deleteTask(id: Int) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
+        val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
         // ищем напоминалку id
@@ -250,6 +307,7 @@ class MainActivity : AppCompatActivity() {
         dbManager.saveTasks(tasks)
 
         windowTasks.visibility = View.VISIBLE
+        bottomMenu.visibility = View.VISIBLE
         windowAddTask.visibility = View.GONE
     }
 

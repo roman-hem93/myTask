@@ -66,8 +66,18 @@
         tools:visibility="gone" />
 
     <include
-        android:id="@+id/windowCategories"
-        layout="@layout/window_categories"
+        android:id="@+id/bottomMenu"
+        layout="@layout/bottom_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        android:id="@+id/windowGreyBackground"
+        layout="@layout/window_grey_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
@@ -78,13 +88,14 @@
         tools:visibility="gone" />
 
     <include
-        android:id="@+id/bottomMenu"
-        layout="@layout/bottom_menu"
-        android:layout_width="match_parent"
+        android:id="@+id/windowCategories"
+        layout="@layout/window_categories"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginStart="-300dp"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

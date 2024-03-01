@@ -7,9 +7,12 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TimePicker
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +20,17 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
     lateinit var dbManager: DateBaseManager
+
+    lateinit var animationAlphaIn : Animation
+    lateinit var animationAlphaOut : Animation
+    lateinit var animationCategoriesIn : Animation
+    lateinit var animationCategoriesOut : Animation
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +47,10 @@ class MainActivity : AppCompatActivity() {
         val windowSetting : ConstraintLayout = findViewById(R.id.windowSetting)
         val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
         val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
+        val windowGrayBackground : ConstraintLayout = findViewById(R.id.windowGreyBackground)
+
+
+        //val ltCategoriesList : ConstraintLayout = findViewById(R.id.ltCategoriesList)
 
         val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
@@ -52,6 +65,16 @@ class MainActivity : AppCompatActivity() {
         val buttonSetTimeCancel : Button = findViewById(R.id.setTimeCancel)
         val buttonTasksDate : Button = findViewById(R.id.tasksDate)
         val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
+        val buttonCatigoriesTasksItem : ImageView = findViewById(R.id.buttonCatigoriesTasksItem)
+
+        //анимация
+        //animationAlphaIn = AnimationUtils.loadAnimation(this, R.anim.alpha_in)
+        //animationAlphaOut = AnimationUtils.loadAnimation(this, R.anim.alpha_out)
+        //animationCategoriesIn = AnimationUtils.loadAnimation(this, R.anim.move_categories_in)
+        //animationCategoriesOut = AnimationUtils.loadAnimation(this, R.anim.move_categories_out)
+        //animationCategoriesIn.setAnimationListener(this)
+
+
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
@@ -59,6 +82,33 @@ class MainActivity : AppCompatActivity() {
         tasks = dbManager.getTasks()
 
         val notifications : Notifications = Notifications(this)
+
+
+
+        buttonCatigoriesTasksItem.setOnClickListener() {
+            //windowCategories.visibility = View.VISIBLE
+            windowGrayBackground.visibility = View.VISIBLE
+            windowCategories.x = 0.0f
+            //windowGrayBackground.startAnimation(animationAlphaIn)
+            //windowTasks.visibility = View.GONE
+            //bottomMenu.visibility = View.GONE
+
+            //windowCategories.startAnimation(animationCategoriesIn)
+
+        }
+
+        windowGrayBackground.setOnClickListener() {
+            //windowTasks.visibility = View.VISIBLE
+            //bottomMenu.visibility = View.VISIBLE
+            //windowCategories.startAnimation(animationCategoriesOut)
+            windowGrayBackground.visibility = View.GONE
+            windowCategories.x = -windowCategories.width.toFloat()
+        }
+
+        windowCategories.setOnClickListener() {
+            myAlert("Тест")
+        }
+
 
 
 
@@ -311,8 +361,22 @@ class MainActivity : AppCompatActivity() {
         windowAddTask.visibility = View.GONE
     }
 
-    fun myAlert() {
-        Toast.makeText(this, "Тест",Toast.LENGTH_LONG).show()
+    fun myAlert(text : String) {
+        Toast.makeText(this, text,Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onAnimationStart(p0: Animation?) {
+
+    }
+
+    override fun onAnimationEnd(p0: Animation?) {
+        //val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
+        //windowCategories.x = 0.0f
+        //myAlert("dfghdfg")
+    }
+
+    override fun onAnimationRepeat(p0: Animation?) {
+
     }
 
 

@@ -1,14 +1,12 @@
 package ru.artrostudio.mytask
 
 
+import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation
-import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
@@ -19,12 +17,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ru.artrostudio.mytask.database.DataBaseManager
+import ru.artrostudio.mytask.database.sqlite.SQLiteManager
+import ru.artrostudio.mytask.database.sqlite.StructureBD
 
 class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
-    lateinit var dbManager: DateBaseManager
+    lateinit var dbManager: DataBaseManager
 
     lateinit var animationAlphaIn : Animation
     lateinit var animationAlphaOut : Animation
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
-        dbManager = DateBaseManager(this)
+        dbManager = DataBaseManager(this)
         tasks = dbManager.getTasks()
 
         val notifications : Notifications = Notifications(this)
@@ -118,22 +119,77 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
 
         // попытки сделать что-то с SQLite, пока нафиг
+        // перенеси потом в DataBaseManager
 
-        val db : SQLiteDatabase = baseContext.openOrCreateDatabase("app.db", MODE_PRIVATE, null)
-        db.execSQL("CREATE TABLE IF NOT EXISTS users (name TEXT, age INTEGER, UNIQUE(name))")
-        db.execSQL("INSERT OR IGNORE INTO users VALUES ('Tom Smith', 23), ('John Dow', 31);")
+        val str: String = StructureBD.tableTasks.TABLE_NAME
 
-        val query : Cursor = db.rawQuery("SELECT * FROM users;", null)
-        if(query.moveToFirst()) {
+        val dbHelper = SQLiteManager(this)
+        val db = dbHelper.writableDatabase
 
-            val name : String = query.getString(0)
-            val age : Int = query.getInt(1)
-
-            Log.i("Developer.BD","Тест SQL: $name и $age")
+        val values = ContentValues().apply {
+            put(StructureBD.tableTasks.COLUMN_NAME_TITLE, "Заголовок")
+            put(StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION, "Описание")
         }
 
-        query.close()
-        db.close()
+        val newRowId = db?.insert(StructureBD.tableTasks.TABLE_NAME, null, values)
+
+        Log.i("Developer.BD","Запись в  БД: $newRowId")
+
+        val db2 = dbHelper.readableDatabase
+
+        // таблица, в которой роемся
+        val table = StructureBD.tableTasks.TABLE_NAME
+        // возвращаемые столбцы или null чтобы вернуть все
+        val projection = arrayOf(StructureBD.allTable.COLUMN_NAME_ID, StructureBD.tableTasks.COLUMN_NAME_TITLE, StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION)
+        // столбцы, учитываемые в фильрации WHERE
+        val selection = "${StructureBD.tableTasks.COLUMN_NAME_TITLE} = ?"
+        // значения для столбцов WHERE
+        val selectionArgs = arrayOf("My Title")
+        // это что такое?
+        val groupBy = null
+        // это что такое?
+        val having = null
+        // порядок сортировки
+        val sortOrder = "${StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION} DESC"
+        val cursor = db.query(table, null, null, null, groupBy, having, sortOrder)
+
+        // проходимся по полученным данным
+        val itemIds = mutableListOf<Long>()
+        with(cursor) {
+            while (moveToNext()) {
+                val itemId = getLong(getColumnIndexOrThrow(StructureBD.allTable.COLUMN_NAME_ID))
+                itemIds.add(itemId)
+            }
+        }
+        cursor.close()
+        Log.i("Developer.BD","Вытянули из БД: $itemIds")
+
+
+        // РАЗЮЕРИСЬ С УДАЛЕНИЕМ ДАННЫХ
+        // и с фоновым потоком
+
+        // это нужно завернуть в onDestroy() активити
+        dbHelper.close()
+        super.onDestroy()
+
+
+
+        //ниже фуфловский вариант, удали
+//        val db : SQLiteDatabase = baseContext.openOrCreateDatabase("app.db", MODE_PRIVATE, null)
+//        db.execSQL("CREATE TABLE IF NOT EXISTS users (name TEXT, age INTEGER, UNIQUE(name))")
+//        db.execSQL("INSERT OR IGNORE INTO users VALUES ('Tom Smith', 23), ('John Dow', 31);")
+//
+//        val query : Cursor = db.rawQuery("SELECT * FROM users;", null)
+//        if(query.moveToFirst()) {
+//
+//            val name : String = query.getString(0)
+//            val age : Int = query.getInt(1)
+//
+//            Log.i("Developer.BD","Тест SQL: $name и $age")
+//        }
+//
+//        query.close()
+//        db.close()
 
 
 

@@ -1,13 +1,13 @@
-package ru.artrostudio.mytask
+package ru.artrostudio.mytask.database
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ru.artrostudio.mytask.DataTask
 
-class DateBaseManager(_context: Context) {
+class DataBaseManager(_context: Context) {
 
     private val context : Context = _context
     private val sp = context.getSharedPreferences("PreferencesName", Context.MODE_PRIVATE)

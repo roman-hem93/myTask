@@ -17,6 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import ru.artrostudio.mytask.database.DataBaseManager
 import ru.artrostudio.mytask.database.sqlite.SQLiteManager
 import ru.artrostudio.mytask.database.sqlite.StructureBD
@@ -124,6 +129,8 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
         val str: String = StructureBD.tableTasks.TABLE_NAME
 
         val dbHelper = SQLiteManager(this)
+
+        // запись данных
         val db = dbHelper.writableDatabase
 
         val values = ContentValues().apply {
@@ -135,6 +142,8 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
         Log.i("Developer.BD","Запись в  БД: $newRowId")
 
+
+        // запрос данных
         val db2 = dbHelper.readableDatabase
 
         // таблица, в которой роемся
@@ -165,49 +174,49 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
         Log.i("Developer.BD","Вытянули из БД: $itemIds")
 
 
-        // РАЗЮЕРИСЬ С УДАЛЕНИЕМ ДАННЫХ
-        // и с фоновым потоком
+        // удаление
+
+        val db3 = dbHelper.readableDatabase
+        // таблица, в которой удаляем
+        val table_del = StructureBD.tableTasks.TABLE_NAME
+        // столбцы, учитываемые в фильрации WHERE
+        val selection_del = "${StructureBD.allTable.COLUMN_NAME_ID} = ? OR ${StructureBD.allTable.COLUMN_NAME_ID} = ?"
+        // значения для столбцов WHERE
+        val selectionArgs_del = arrayOf("5","6")
+        // Issue SQL statement.
+        val deletedRows = db3.delete(table_del, selection_del, selectionArgs_del)
+        Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
+
+        // !!!!!!!!!!!!!!! фоновым потоком
 
         // это нужно завернуть в onDestroy() активити
         dbHelper.close()
-        super.onDestroy()
-
-
-
-        //ниже фуфловский вариант, удали
-//        val db : SQLiteDatabase = baseContext.openOrCreateDatabase("app.db", MODE_PRIVATE, null)
-//        db.execSQL("CREATE TABLE IF NOT EXISTS users (name TEXT, age INTEGER, UNIQUE(name))")
-//        db.execSQL("INSERT OR IGNORE INTO users VALUES ('Tom Smith', 23), ('John Dow', 31);")
-//
-//        val query : Cursor = db.rawQuery("SELECT * FROM users;", null)
-//        if(query.moveToFirst()) {
-//
-//            val name : String = query.getString(0)
-//            val age : Int = query.getInt(1)
-//
-//            Log.i("Developer.BD","Тест SQL: $name и $age")
-//        }
-//
-//        query.close()
-//        db.close()
+        //super.onDestroy()
 
 
 
 
+        // потоки
 
+        // этот вариант подвешивает основной поток
+        // отсюда книжка
+        // https://kotlinlang.org/docs/coroutines-basics.html#your-first-coroutine
+        fun main() = runBlocking { // this: CoroutineScope
+            launch { // launch a new coroutine and continue
+                delay(2000L) // non-blocking delay for 1 second (default time unit is ms)
+                Log.i("Developer.test","Word")
+            }
+            Log.i("Developer.test","Hello")
+        }
+        main()
 
-
-
-
-
-
-
-
-
-
-
-
-
+        // вариант покороче
+        // вообще прикольно тут расписано:
+        // https://ru.stackoverflow.com/questions/392126/%D0%9A%D0%B0%D0%BA-%D1%81%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C-10-%D1%81%D0%B5%D0%BA%D1%83%D0%BD%D0%B4%D0%BD%D1%83%D1%8E-%D0%B7%D0%B0%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D1%83
+        CoroutineScope(Dispatchers.IO).launch {
+            delay(1000L)
+            Log.i("Developer.test","Wordddd")
+        }
 
 
 

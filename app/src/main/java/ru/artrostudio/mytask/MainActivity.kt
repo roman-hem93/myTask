@@ -4,6 +4,7 @@ package ru.artrostudio.mytask
 import android.content.ContentValues
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation
@@ -17,16 +18,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import ru.artrostudio.mytask.database.DataBaseManager
 import ru.artrostudio.mytask.database.sqlite.SQLiteManager
 import ru.artrostudio.mytask.database.sqlite.StructureBD
+import ru.artrostudio.mytask.modules.MyAnimation
 
-class MainActivity : AppCompatActivity(), Animation.AnimationListener {
+class MainActivity : AppCompatActivity() {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
@@ -73,15 +82,6 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
         val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
         val buttonCatigoriesTasksItem : ImageView = findViewById(R.id.buttonCatigoriesTasksItem)
 
-        //анимация
-        //animationAlphaIn = AnimationUtils.loadAnimation(this, R.anim.alpha_in)
-        //animationAlphaOut = AnimationUtils.loadAnimation(this, R.anim.alpha_out)
-        //animationCategoriesIn = AnimationUtils.loadAnimation(this, R.anim.move_categories_in)
-        //animationCategoriesOut = AnimationUtils.loadAnimation(this, R.anim.move_categories_out)
-        //animationCategoriesIn.setAnimationListener(this)
-
-
-
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
         dbManager = DataBaseManager(this)
@@ -89,26 +89,17 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
 
         val notifications : Notifications = Notifications(this)
 
-
-
         buttonCatigoriesTasksItem.setOnClickListener() {
-            //windowCategories.visibility = View.VISIBLE
+            windowCategories.visibility = View.VISIBLE
             windowGrayBackground.visibility = View.VISIBLE
-            windowCategories.x = 0.0f
-            //windowGrayBackground.startAnimation(animationAlphaIn)
-            //windowTasks.visibility = View.GONE
-            //bottomMenu.visibility = View.GONE
-
-            //windowCategories.startAnimation(animationCategoriesIn)
-
+            windowGrayBackground.alpha = 0f // задаю тут, т.к. объект include в xml не поддерживает свойство alpa
+            MyAnimation.start(windowCategories, MyAnimation.ATTRIBUTE_X, false, 9999f, 0f,120L, MyAnimation.TYPE_EVENLY)
+            MyAnimation.start(windowGrayBackground, MyAnimation.ATTRIBUTE_ALPHA, false, 9999f, 1f,120L, MyAnimation.TYPE_EVENLY)
         }
 
         windowGrayBackground.setOnClickListener() {
-            //windowTasks.visibility = View.VISIBLE
-            //bottomMenu.visibility = View.VISIBLE
-            //windowCategories.startAnimation(animationCategoriesOut)
-            windowGrayBackground.visibility = View.GONE
-            windowCategories.x = -windowCategories.width.toFloat()
+            MyAnimation.start(windowCategories, MyAnimation.ATTRIBUTE_X, false, 9999f, -windowCategories.width.toFloat(),120L, MyAnimation.TYPE_EVENLY, {windowCategories.visibility = View.GONE})
+            MyAnimation.start(windowGrayBackground, MyAnimation.ATTRIBUTE_ALPHA, false, 9999f, 0f,120L, MyAnimation.TYPE_EVENLY,{windowGrayBackground.visibility = View.GONE})
         }
 
         windowCategories.setOnClickListener() {
@@ -192,31 +183,6 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
         // это нужно завернуть в onDestroy() активити
         dbHelper.close()
         //super.onDestroy()
-
-
-
-
-        // потоки
-
-        // этот вариант подвешивает основной поток
-        // отсюда книжка
-        // https://kotlinlang.org/docs/coroutines-basics.html#your-first-coroutine
-        fun main() = runBlocking { // this: CoroutineScope
-            launch { // launch a new coroutine and continue
-                delay(2000L) // non-blocking delay for 1 second (default time unit is ms)
-                Log.i("Developer.test","Word")
-            }
-            Log.i("Developer.test","Hello")
-        }
-        main()
-
-        // вариант покороче
-        // вообще прикольно тут расписано:
-        // https://ru.stackoverflow.com/questions/392126/%D0%9A%D0%B0%D0%BA-%D1%81%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C-10-%D1%81%D0%B5%D0%BA%D1%83%D0%BD%D0%B4%D0%BD%D1%83%D1%8E-%D0%B7%D0%B0%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D1%83
-        CoroutineScope(Dispatchers.IO).launch {
-            delay(1000L)
-            Log.i("Developer.test","Wordddd")
-        }
 
 
 
@@ -430,18 +396,16 @@ class MainActivity : AppCompatActivity(), Animation.AnimationListener {
         Toast.makeText(this, text,Toast.LENGTH_SHORT).show()
     }
 
-    override fun onAnimationStart(p0: Animation?) {
+    suspend fun test1(a : Int, b: Int) : Int {
+        delay(10000L)
+        val c = a + b
+        Log.i("Developer.test","Результат: $c")
 
+        return c
     }
-
-    override fun onAnimationEnd(p0: Animation?) {
-        //val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
-        //windowCategories.x = 0.0f
-        //myAlert("dfghdfg")
-    }
-
-    override fun onAnimationRepeat(p0: Animation?) {
-
+    fun test2() {
+        Log.i("Developer.test","Выполнилась лямбда")
+        Toast.makeText(this, "Выполнилась лямбда",Toast.LENGTH_SHORT).show()
     }
 
 

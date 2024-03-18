@@ -1,4 +1,4 @@
-package ru.artrostudio.mytask
+package ru.artrostudio.mytask.modules
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -9,10 +9,11 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat.getSystemService
+import ru.artrostudio.mytask.MainActivity
+import ru.artrostudio.mytask.R
 
 @SuppressLint("MissingPermission")  // убирает необходимость запроса разрешений, УБЕРИ потом
-class Notifications(_context: Context) {
+class MyNotifications(_context: Context) {
     private val context : Context = _context
 
     // ТУТ ВСЁ ОЧЕНЬ ДЕРЕВЯННО

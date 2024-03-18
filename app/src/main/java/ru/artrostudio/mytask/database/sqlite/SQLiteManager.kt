@@ -1,39 +1,52 @@
 package ru.artrostudio.mytask.database.sqlite
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import ru.artrostudio.mytask.DataTask
 
-// Константы с самыми глобальными запросами на создание структуры БД и удаления БД
-private const val SQL_CREATE_TABLE_TASKS =
-    "CREATE TABLE ${StructureBD.tableTasks.TABLE_NAME} (" +
-            "${StructureBD.allTable.COLUMN_NAME_ID} INTEGER PRIMARY KEY," +
-            "${StructureBD.tableTasks.COLUMN_NAME_TITLE} TEXT," +
-            "${StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION} TEXT)"
+// тут описано взаимодействие с базой данных с точки зрения текущего приложения
+class SQLiteManager(context: Context) {
 
-private const val SQL_DELETE_TABLE_TASKS = "DROP TABLE IF EXISTS ${StructureBD.tableTasks.TABLE_NAME}"
-
-class SQLiteManager(context: Context) : SQLiteOpenHelper(context, StructureBD.DATABASE_NAME, null, StructureBD.DATABASE_VERSION) {
-
-    // Обязательный метод
-    // Вызывается при первом создании базы данных
-    // Здесь должно происходить создание таблиц и их первоначальное заполнение
-    override fun onCreate(db: SQLiteDatabase?) {
-        db?.execSQL(SQL_CREATE_TABLE_TASKS)
-
-        Log.i("Developer.BD","Выполнился метод onCreate SQLite (создание бд)")
+    val mySQLiteOpenHelper : MySQLiteOpenHelper
+    private val tasks : ArrayList<DataTask> = ArrayList<DataTask>()
+    init {
+        mySQLiteOpenHelper = MySQLiteOpenHelper(context)
     }
 
-    // Обязательный метод
-    //Вызывается, когда базу данных необходимо обновить (для удаления таблиц, добавления таблиц, изменения количества столбцов)
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        //удаление таблицы
-        //db.execSQL(SQL_DELETE_TABLE_TASKS)
-
-        //создание новой пустой таблицы
-        //onCreate(db)
-
-        Log.i("Developer.BD","Выполнился метод onUpgrade SQLite (обновление версии бд)")
+    // просто ссылка на аналогичный метод в исходном классе
+    // следует вызывать в активити в методе onDestroy
+    fun close() {
+        mySQLiteOpenHelper.close()
+        Log.i("Developer.BD","Работа с БД завершена")
     }
+
+    fun getTasks () : ArrayList<DataTask> {
+        testAddTasks(tasks)
+
+
+        //Log.i("Developer.BD","Достали из файла строку с задачами: $str")
+
+        return tasks
+    }
+
+    fun saveTasks (array : ArrayList<DataTask>) {
+
+        //Log.i("Developer.BD","Сохраняем в БД задачи: $str")
+
+    }
+
+    private fun testAddTasks (array : ArrayList<DataTask>) {
+        val task1 : DataTask = DataTask(0,"Заголовок 1", "Описание", "дата текстом", 1)
+        val task2 : DataTask = DataTask(1,"Заголовок 2", "Описание", "дата текстом", 0)
+        val task3 : DataTask = DataTask(2,"Заголовок 3", "Описание", "дата текстом", 1)
+        val task4 : DataTask = DataTask(3,"Заголовок 4", "Описание", "дата текстом", 0)
+
+        array.add(task1)
+        array.add(task2)
+        array.add(task3)
+        array.add(task4)
+    }
+
 }

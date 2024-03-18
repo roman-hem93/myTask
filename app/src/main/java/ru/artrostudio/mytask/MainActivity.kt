@@ -1,10 +1,8 @@
 package ru.artrostudio.mytask
 
 
-import android.content.ContentValues
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation
@@ -18,28 +16,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import ru.artrostudio.mytask.database.DataBaseManager
+import ru.artrostudio.mytask.database.sqlite.MySQLiteOpenHelper
 import ru.artrostudio.mytask.database.sqlite.SQLiteManager
-import ru.artrostudio.mytask.database.sqlite.StructureBD
 import ru.artrostudio.mytask.modules.MyAnimation
+import ru.artrostudio.mytask.modules.MyNotifications
 
 class MainActivity : AppCompatActivity() {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
-    lateinit var dbManager: DataBaseManager
+    lateinit var SQLiteManager: SQLiteManager
+
 
     lateinit var animationAlphaIn : Animation
     lateinit var animationAlphaOut : Animation
@@ -84,10 +72,10 @@ class MainActivity : AppCompatActivity() {
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
-        dbManager = DataBaseManager(this)
-        tasks = dbManager.getTasks()
+        SQLiteManager = SQLiteManager(this)
+        tasks = SQLiteManager.getTasks()
 
-        val notifications : Notifications = Notifications(this)
+        val notifications : MyNotifications = MyNotifications(this)
 
         buttonCatigoriesTasksItem.setOnClickListener() {
             windowCategories.visibility = View.VISIBLE
@@ -114,75 +102,18 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        // попытки сделать что-то с SQLite, пока нафиг
-        // перенеси потом в DataBaseManager
-
-        val str: String = StructureBD.tableTasks.TABLE_NAME
-
-        val dbHelper = SQLiteManager(this)
-
-        // запись данных
-        val db = dbHelper.writableDatabase
-
-        val values = ContentValues().apply {
-            put(StructureBD.tableTasks.COLUMN_NAME_TITLE, "Заголовок")
-            put(StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION, "Описание")
-        }
-
-        val newRowId = db?.insert(StructureBD.tableTasks.TABLE_NAME, null, values)
-
-        Log.i("Developer.BD","Запись в  БД: $newRowId")
 
 
-        // запрос данных
-        val db2 = dbHelper.readableDatabase
-
-        // таблица, в которой роемся
-        val table = StructureBD.tableTasks.TABLE_NAME
-        // возвращаемые столбцы или null чтобы вернуть все
-        val projection = arrayOf(StructureBD.allTable.COLUMN_NAME_ID, StructureBD.tableTasks.COLUMN_NAME_TITLE, StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION)
-        // столбцы, учитываемые в фильрации WHERE
-        val selection = "${StructureBD.tableTasks.COLUMN_NAME_TITLE} = ?"
-        // значения для столбцов WHERE
-        val selectionArgs = arrayOf("My Title")
-        // это что такое?
-        val groupBy = null
-        // это что такое?
-        val having = null
-        // порядок сортировки
-        val sortOrder = "${StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION} DESC"
-        val cursor = db.query(table, null, null, null, groupBy, having, sortOrder)
-
-        // проходимся по полученным данным
-        val itemIds = mutableListOf<Long>()
-        with(cursor) {
-            while (moveToNext()) {
-                val itemId = getLong(getColumnIndexOrThrow(StructureBD.allTable.COLUMN_NAME_ID))
-                itemIds.add(itemId)
-            }
-        }
-        cursor.close()
-        Log.i("Developer.BD","Вытянули из БД: $itemIds")
 
 
-        // удаление
 
-        val db3 = dbHelper.readableDatabase
-        // таблица, в которой удаляем
-        val table_del = StructureBD.tableTasks.TABLE_NAME
-        // столбцы, учитываемые в фильрации WHERE
-        val selection_del = "${StructureBD.allTable.COLUMN_NAME_ID} = ? OR ${StructureBD.allTable.COLUMN_NAME_ID} = ?"
-        // значения для столбцов WHERE
-        val selectionArgs_del = arrayOf("5","6")
-        // Issue SQL statement.
-        val deletedRows = db3.delete(table_del, selection_del, selectionArgs_del)
-        Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
 
-        // !!!!!!!!!!!!!!! фоновым потоком
 
-        // это нужно завернуть в onDestroy() активити
-        dbHelper.close()
-        //super.onDestroy()
+
+
+
+
+
 
 
 
@@ -263,6 +194,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onDestroy() {
+        SQLiteManager.close()
+        super.onDestroy()
+    }
+
     fun openTask(id: Int) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
@@ -310,7 +246,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dbManager.saveTasks(tasks)
+        SQLiteManager.saveTasks(tasks)
 
         // говорим адаптеру, что нужно обновить нужную вьюху
         //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
@@ -359,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         // говорим адаптеру "обнови всё" - не рекомендуется
         rvTasks.adapter?.notifyDataSetChanged()
 
-        dbManager.saveTasks(tasks)
+        SQLiteManager.saveTasks(tasks)
 
         windowTasks.visibility = View.VISIBLE
         bottomMenu.visibility = View.VISIBLE
@@ -385,7 +321,7 @@ class MainActivity : AppCompatActivity() {
         // говорим адаптеру "обнови всё" - не рекомендуется
         rvTasks.adapter?.notifyDataSetChanged()
 
-        dbManager.saveTasks(tasks)
+        SQLiteManager.saveTasks(tasks)
 
         windowTasks.visibility = View.VISIBLE
         bottomMenu.visibility = View.VISIBLE

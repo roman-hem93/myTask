@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 
-class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>, _funOpenTask: (Int) -> Unit, _funSetStatus: (Int) -> Unit) : RecyclerView.Adapter<TasksRecyclerViewAdapter.ViewHolder>() {
+class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>, _funOpenTask: (Long) -> Unit, _funSetStatus: (Long) -> Unit) : RecyclerView.Adapter<TasksRecyclerViewAdapter.ViewHolder>() {
 
     var context = _context
     var funOpenTask = _funOpenTask

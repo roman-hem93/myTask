@@ -2,27 +2,23 @@ package ru.artrostudio.mytask.database.sqlite
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import ru.artrostudio.mytask.DataTask
 
-// Константы на создание структуры БД
-// создание таблицы с задачами
-private const val SQL_CREATE_TABLE_TASKS =
-    "CREATE TABLE ${StructureBD.tableTasks.TABLE_NAME} (" +
-            "${StructureBD.allTable.COLUMN_NAME_ID} INTEGER PRIMARY KEY," +
-            "${StructureBD.tableTasks.COLUMN_NAME_TITLE} TEXT," +
-            "${StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION} TEXT)"
 
 // В этом классе происходит прямое взаимодействие с БД
 // тут только самые глобальные общие методы
+// в идеале полностью абстрагироваться от текущего приложения
 class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, StructureBD.DATABASE_NAME, null, StructureBD.DATABASE_VERSION) {
 
     // Обязательный метод
     // Вызывается при первом создании базы данных
     // Здесь должно происходить создание таблиц и их первоначальное заполнение
     override fun onCreate(db: SQLiteDatabase?) {
-        db?.execSQL(SQL_CREATE_TABLE_TASKS)
+        db?.execSQL(StructureBD.SQL_CREATE_TABLE_TASKS)
 
         Log.i("Developer.BD","Выполнился метод onCreate SQLite (создание бд)")
     }
@@ -42,58 +38,64 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
     // ниже самописные методы
 
     //ЗАПИСЬ В ТАБЛИЦУ
-    fun insert() {
+    fun insert(table: String, values: ContentValues) : Long {
+        // table - таблица, в которую пишем
+        // values данные в виде ключ-значение
+
         // открывает связь с БД с правами на всё
         val db = this.writableDatabase
 
-        val values = ContentValues().apply {
-            put(StructureBD.tableTasks.COLUMN_NAME_TITLE, "Заголовок")
-            put(StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION, "Описание")
-        }
-
-        val newRowId = db?.insert(StructureBD.tableTasks.TABLE_NAME, null, values)
+        val newRowId = db.insert(table, null, values)
 
         // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
         db.close()
 
-        Log.i("Developer.BD","Запись в  БД: $newRowId")
+        Log.i("Developer.BD","Выполнена запись в  БД. Таблица: $table, id: $newRowId, данные: $values")
+
+        // возвращаем id новой записи
+        return newRowId
     }
 
     //ЧТЕНИЕ ДАННЫХ
-    fun query() {
-        // открывает связь с БД с правами на чтение (на практике запись и удаление тоже сработали)
-        val db = this.readableDatabase
+    fun query(table: String, columns: Array<String>?, selection: String?, selectionArgs: Array<String>?, groupBy: String?, having: String?, sortOrder: String?) : ArrayList<ContentValues> {
+        // table - таблица, в которой роемся
+        // columns - возвращаемые столбцы или null чтобы вернуть все (ПРИМЕР: columns = arrayOf("nameColumn", "nameColumn2") или columns = null)
+        // selection - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: selection = "nameColumn = ?, nameColumn = ?" )
+        // selectionArgs - значения для столбцов WHERE  (ПРИМЕР selectionArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в selection
+        // groupBy - группировка - это что такое?
+        // having - фильтрация ГРУПП (т.е. работает в паре с groupBy) или null (ПРИМЕР having = "nameColumn > 5")
+        // sortOrder - порядок сортировки или null (ПРИМЕР sortOrder = "nameColumn DESC")
 
-        // таблица, в которой роемся
-        val table = StructureBD.tableTasks.TABLE_NAME
-        // возвращаемые столбцы или null чтобы вернуть все
-        val projection = arrayOf(StructureBD.allTable.COLUMN_NAME_ID, StructureBD.tableTasks.COLUMN_NAME_TITLE, StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION)
-        // столбцы, учитываемые в фильрации WHERE
-        val selection = "${StructureBD.tableTasks.COLUMN_NAME_TITLE} = ?"
-        // значения для столбцов WHERE
-        val selectionArgs = arrayOf("My Title")
-        // это что такое?
-        val groupBy = null
-        // это что такое?
-        val having = null
-        // порядок сортировки
-        val sortOrder = "${StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION} DESC"
-        val cursor = db.query(table, null, null, null, groupBy, having, sortOrder)
+        // открывает связь с БД с правами на чтение (на практике запись и удаление тоже сработали, надо разбираться)
+        val db = this.readableDatabase
+        val cursor = db.query(table, columns, selection, selectionArgs, groupBy, having, sortOrder)
+
+        val list = ArrayList<ContentValues>()
 
         // проходимся по полученным данным
-        val itemIds = mutableListOf<Long>()
         with(cursor) {
             while (moveToNext()) {
-                val itemId = getLong(getColumnIndexOrThrow(StructureBD.allTable.COLUMN_NAME_ID))
-                itemIds.add(itemId)
+                // из результата получаем массив с названиями столбцов
+                val values = ContentValues()
+
+                val columns = cursor.columnNames
+
+                // собираем всю инфу из строки
+                for (colum in columns) {
+                    values.put(colum, getString(getColumnIndexOrThrow(colum)))
+                }
+                list.add(values)
             }
         }
+        // закрываем курсор
         cursor.close()
 
         // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
         db.close()
 
-        Log.i("Developer.BD","Вытянули из БД: $itemIds")
+        Log.i("Developer.BD","Выполнена вызгрузка из БД. Из таблицы: $table, данные: $list")
+
+        return list
     }
 
     // УДАЛЕНИЕ ДАННЫХ
@@ -114,6 +116,19 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
         db.close()
 
         Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
+    }
+
+    //ПРОИЗВОЛЬНЫЙ ЗАПРОС
+    fun requestSQL(request : String) {
+        // открывает связь с БД с правами на всё
+        val db = this.writableDatabase
+
+        db.execSQL(request)
+
+        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+        db.close()
+
+        Log.i("Developer.BD","Выполнен произвольный запрос к БД")
     }
 
 }

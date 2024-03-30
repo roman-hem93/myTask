@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
-    lateinit var SQLiteManager: SQLiteManager
+    lateinit var dbManager: SQLiteManager
 
 
     lateinit var animationAlphaIn : Animation
@@ -72,8 +72,9 @@ class MainActivity : AppCompatActivity() {
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
-        SQLiteManager = SQLiteManager(this)
-        tasks = SQLiteManager.getTasks()
+        dbManager = SQLiteManager(this)
+        tasks = dbManager.getTasks()
+        //tasks = ArrayList<DataTask>()
 
         val notifications : MyNotifications = MyNotifications(this)
 
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 
 
         // определяем и настраиваем RecyclerView
-        val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Int -> openTask(id)}, {id: Int -> setStatus(id)})
+        val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Long -> openTask(id)}, {id: Long -> setStatus(id)})
         rvTasks.hasFixedSize()
         rvTasks.layoutManager = LinearLayoutManager(this)
         rvTasks.adapter = adapter
@@ -195,11 +196,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        SQLiteManager.close()
+        dbManager.close()
         super.onDestroy()
     }
 
-    fun openTask(id: Int) {
+    fun openTask(id: Long) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
@@ -223,7 +224,7 @@ class MainActivity : AppCompatActivity() {
             if (item.id == id) {
                 editTextAddTaskDate.setText(item.date)
                 editTextAddTaskTitle.setText(item.title)
-                editTextAddTaskMessage.setText(item.message)
+                editTextAddTaskMessage.setText(item.description)
             }
         }
 
@@ -232,7 +233,7 @@ class MainActivity : AppCompatActivity() {
         bottomMenu.visibility = View.GONE
     }
 
-    fun setStatus(id: Int) {
+    fun setStatus(id: Long) {
 
         var newStatus = 0
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
@@ -246,7 +247,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        SQLiteManager.saveTasks(tasks)
+        //dbManager.saveTasks(tasks)
 
         // говорим адаптеру, что нужно обновить нужную вьюху
         //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
@@ -254,7 +255,8 @@ class MainActivity : AppCompatActivity() {
         rvTasks.adapter?.notifyDataSetChanged()
     }
 
-    fun saveTask(id: Int) {
+    // ТУТ ВСЁ ХУЕТА, ПЕРЕПИШИ
+    fun saveTask(id: Long) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
@@ -262,29 +264,29 @@ class MainActivity : AppCompatActivity() {
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+        val newTask : DataTask = DataTask(
+            id = -1L,
+            title = "",
+            description = "",
+            date = "",
+            status = 0
+        )
 
-        if (id == -1) { // новая напоминалка
+        if (id == -1L) { // новая напоминалка
 
-            // определяем наибольший id в базе
-            var idNew = 0
-            for(item in tasks) {
-                if (item.id >= idNew) idNew = item.id + 1
-            }
+            newTask.title = editTextAddTaskTitle.text.toString()
+            newTask.description = editTextAddTaskMessage.text.toString()
+            newTask.date = editTextAddTaskDate.text.toString()
 
-            tasks.add(
-                DataTask(
-                    idNew,
-                    editTextAddTaskTitle.text.toString(),
-                    editTextAddTaskMessage.text.toString(),
-                    editTextAddTaskDate.text.toString(),
-                    0
-                )
-            )
+            Log.i("Developer.BD","Бла бла бла")
+
+            tasks.add(newTask)
+
         } else { // редактируем напоминалку id
             for(item in tasks) {
                 if (item.id == id) {
                     item.title = editTextAddTaskTitle.text.toString()
-                    item.message = editTextAddTaskMessage.text.toString()
+                    item.description = editTextAddTaskMessage.text.toString()
                     item.date = editTextAddTaskDate.text.toString()
                 }
             }
@@ -295,14 +297,15 @@ class MainActivity : AppCompatActivity() {
         // говорим адаптеру "обнови всё" - не рекомендуется
         rvTasks.adapter?.notifyDataSetChanged()
 
-        SQLiteManager.saveTasks(tasks)
+        //dbManager.saveTasks(tasks)
+        dbManager.addTask(newTask)
 
         windowTasks.visibility = View.VISIBLE
         bottomMenu.visibility = View.VISIBLE
         windowAddTask.visibility = View.GONE
     }
 
-    fun deleteTask(id: Int) {
+    fun deleteTask(id: Long) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
@@ -321,7 +324,7 @@ class MainActivity : AppCompatActivity() {
         // говорим адаптеру "обнови всё" - не рекомендуется
         rvTasks.adapter?.notifyDataSetChanged()
 
-        SQLiteManager.saveTasks(tasks)
+        //dbManager.saveTasks(tasks)
 
         windowTasks.visibility = View.VISIBLE
         bottomMenu.visibility = View.VISIBLE

@@ -60,8 +60,9 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
     fun query(table: String, columns: Array<String>?, selection: String?, selectionArgs: Array<String>?, groupBy: String?, having: String?, sortOrder: String?) : ArrayList<ContentValues> {
         // table - таблица, в которой роемся
         // columns - возвращаемые столбцы или null чтобы вернуть все (ПРИМЕР: columns = arrayOf("nameColumn", "nameColumn2") или columns = null)
-        // selection - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: selection = "nameColumn = ?, nameColumn = ?" )
+        // selection - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: selection = "nameColumn = ?, nameColumn2 = ?" )
         // selectionArgs - значения для столбцов WHERE  (ПРИМЕР selectionArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в selection
+        //                 допускается не использовать selectionArgs, а указать полное выражение WHERE в whereClause без знаков ?, но тогда нужно selectionArgs=null
         // groupBy - группировка - это что такое?
         // having - фильтрация ГРУПП (т.е. работает в паре с groupBy) или null (ПРИМЕР having = "nameColumn > 5")
         // sortOrder - порядок сортировки или null (ПРИМЕР sortOrder = "nameColumn DESC")
@@ -98,24 +99,72 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
         return list
     }
 
-    // УДАЛЕНИЕ ДАННЫХ
-    fun delete() {
+    // ОБНОВЛЕНИЕ ДАННЫХ
+    fun update(table: String, values: ContentValues, whereClause: String?, whereArgs: Array<String>?) : Int {
+        // table - таблица, в которой обновляем данные
+        // values -  данные в виде ключ-значение
+        // whereClause - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: whereClause = "nameColumn = ?, nameColumn2 = ?" )
+        // whereArgs - значения для столбцов WHERE  (ПРИМЕР whereArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в whereClause
+        //             допускается не использовать whereArgs, а указать полное выражение WHERE в whereClause без знаков ?, но тогда нужно whereArgs=null
+
         // открывает связь с БД с правами на всё
         val db = this.writableDatabase
 
-        // таблица, в которой удаляем
-        val table_del = StructureBD.tableTasks.TABLE_NAME
-        // столбцы, учитываемые в фильрации WHERE
-        val selection_del = "${StructureBD.allTable.COLUMN_NAME_ID} = ? OR ${StructureBD.allTable.COLUMN_NAME_ID} = ?"
-        // значения для столбцов WHERE
-        val selectionArgs_del = arrayOf("7","8")
-        // выполняем запрос удаления элементов из БД (возвращает количество удалённых строк)
-        val deletedRows = db.delete(table_del, selection_del, selectionArgs_del)
+        // выполняем запрос обновления данных (возвращает количество затронутых строк)
+        val updatedRows = db.update(table, values, whereClause, whereArgs)
+
+        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+        db.close()
+
+        Log.i("Developer.BD","Обновлена информация в БД. Количество затрунутых строк: $updatedRows")
+
+        return updatedRows
+    }
+
+    // УДАЛЕНИЕ ДАННЫХ
+    fun delete(table: String, whereClause: String?, whereArgs: Array<String>?) {
+        // table - таблица, в которой удаляем данные
+        // whereClause - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: whereClause = "nameColumn = ?, nameColumn2 = ?" )
+        // whereArgs - значения для столбцов WHERE  (ПРИМЕР whereArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в whereClause
+        //             допускается не использовать whereArgs, а указать полное выражение WHERE в whereClause без знаков ?, но тогда нужно whereArgs=null
+
+        // открывает связь с БД с правами на всё
+        val db = this.writableDatabase
+
+        val deletedRows = db.delete(table, whereClause, whereArgs)
 
         // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
         db.close()
 
         Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
+    }
+
+    // ПЕЧАТАЕТ В ПРОТОКОЛ ТАБЛИЦУ
+    fun printTable(table: String) {
+        // table - таблица, которую напечатаем
+
+        // выгружаем таблицу целиком
+        val result = this.query(table, null, null, null, null, null, null)
+
+        Log.i("Developer.BD","------------------ Начинается вавод таблицы $table")
+        var i = 0
+        for (row in result) {
+            // запрашиваем набор всех ключей в этой строке
+            val keys = row.keySet()
+
+            var str : String = ""
+
+            for (key in keys) {
+                val value = row.getAsString(key)
+                str = str + "$key=$value "
+            }
+
+            Log.i("Developer.BD","Строка $i: $str")
+
+            i++
+        }
+
+        Log.i("Developer.BD","------------------ Вывод таблицы $table окончен")
     }
 
     //ПРОИЗВОЛЬНЫЙ ЗАПРОС

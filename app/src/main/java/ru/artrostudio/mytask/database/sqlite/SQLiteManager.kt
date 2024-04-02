@@ -6,15 +6,14 @@ import android.util.Log
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ru.artrostudio.mytask.DataTask
+import java.util.Calendar
+import java.util.Date
 
 // тут описано взаимодействие с базой данных с точки зрения текущего приложения
 class SQLiteManager(context: Context) {
 
     private val mySQLiteOpenHelper : MySQLiteOpenHelper = MySQLiteOpenHelper(context)
 
-    init {
-
-    }
 
     // просто ссылка на аналогичный метод в исходном классе
     // следует вызывать в активити в методе onDestroy
@@ -79,24 +78,70 @@ class SQLiteManager(context: Context) {
         values.put(StructureBD.tableTasks.COLUMN_NAME_DATE, task.date)
         values.put(StructureBD.tableTasks.COLUMN_NAME_STATUS, task.status)
         // дополняем данные системной информацией
+        val dateNow = Date() // текущая дата
         values.put(StructureBD.allTable.COLUMN_NAME_STATUS_ITEM, 1)
-        values.put(StructureBD.allTable.COLUMN_NAME_DATE_CREATION, "Заголовок") /*TODO*/
-        values.put(StructureBD.allTable.COLUMN_NAME_DATE_CHANGE, "Заголовок") /*TODO*/
-        values.put(StructureBD.allTable.COLUMN_NAME_DATE_DELETION, "Заголовок") /*TODO*/
-
-
+        values.put(StructureBD.allTable.COLUMN_NAME_DATE_CREATION, dateNow.time)
+        values.put(StructureBD.allTable.COLUMN_NAME_DATE_CHANGE, 0)
+        values.put(StructureBD.allTable.COLUMN_NAME_DATE_DELETION, 0)
 
         val id = mySQLiteOpenHelper.insert(table, values)
 
-        Log.i("Developer.BD","Попытка сохранения новой задачи в БД")
+        Log.i("Developer.BD","В БД сохранена задача с id = $id")
     }
 
     fun saveTask(task: DataTask) {
 
-        //mySQLiteOpenHelper.insert()
+        // описания в самом методе update
+        val table = StructureBD.tableTasks.TABLE_NAME
 
-        //Log.i("Developer.BD","Сохраняем в БД задачи: $str")
+        val values = ContentValues()
+        // основная информация
+        values.put(StructureBD.tableTasks.COLUMN_NAME_TITLE, task.title)
+        values.put(StructureBD.tableTasks.COLUMN_NAME_DESCRIPTION, task.description)
+        values.put(StructureBD.tableTasks.COLUMN_NAME_DATE, task.date)
+        values.put(StructureBD.tableTasks.COLUMN_NAME_STATUS, task.status)
+        // дополняем данные системной информацией
+        val dateNow = Date() // текущая дата
+        values.put(StructureBD.allTable.COLUMN_NAME_DATE_CHANGE, dateNow.time)
 
+        val whereClause = "${StructureBD.allTable.COLUMN_NAME_ID} = ${task.id}"
+        val whereArgs = null
+
+        val updatedRows = mySQLiteOpenHelper.update(table, values, whereClause, whereArgs)
+
+        Log.i("Developer.BD","Обновили в БД задачу с id = ${task.id}")
+
+    }
+
+    fun deleteTask(id: Long) {
+        // под удалением подразумевается установка статуса COLUMN_NAME_STATUS_ITEM = 0
+        // жестокое удаление информации из БД не приветствуется
+
+        // описания в самом методе update
+        val table = StructureBD.tableTasks.TABLE_NAME
+
+        val values = ContentValues()
+        // основная информация
+        // --- НЕ МЕНЯЕТСЯ при удалении
+
+        // дополняем данные системной информацией
+        val dateNow = Date() // текущая дата
+        values.put(StructureBD.allTable.COLUMN_NAME_STATUS_ITEM, 0)
+        values.put(StructureBD.allTable.COLUMN_NAME_DATE_DELETION, dateNow.time)
+
+        val whereClause = "${StructureBD.allTable.COLUMN_NAME_ID} = $id"
+        val whereArgs = null
+
+        val updatedRows = mySQLiteOpenHelper.update(table, values, whereClause, whereArgs)
+
+        Log.i("Developer.BD","Удалили (условно говоря) в БД задачу с id = $id")
+    }
+
+    // выводит в протокол таблицу tasks из БД
+    fun printTableTasks() {
+        // описания в самом методе printTable
+        val table = StructureBD.tableTasks.TABLE_NAME
+        mySQLiteOpenHelper.printTable(table)
     }
 
     private fun testAddTasks(array : ArrayList<DataTask>) {

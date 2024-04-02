@@ -76,6 +76,8 @@ class MainActivity : AppCompatActivity() {
         tasks = dbManager.getTasks()
         //tasks = ArrayList<DataTask>()
 
+        dbManager.printTableTasks()
+
         val notifications : MyNotifications = MyNotifications(this)
 
         buttonCatigoriesTasksItem.setOnClickListener() {
@@ -244,10 +246,9 @@ class MainActivity : AppCompatActivity() {
                 val oldSt = item.status
                 if (oldSt == 0) newStatus = 1
                 item.status = newStatus
+                dbManager.saveTask(item)
             }
         }
-
-        //dbManager.saveTasks(tasks)
 
         // говорим адаптеру, что нужно обновить нужную вьюху
         //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
@@ -255,8 +256,8 @@ class MainActivity : AppCompatActivity() {
         rvTasks.adapter?.notifyDataSetChanged()
     }
 
-    // ТУТ ВСЁ ХУЕТА, ПЕРЕПИШИ
-    fun saveTask(id: Long) {
+
+      fun saveTask(id: Long) {
         val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
         val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
         val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
@@ -264,30 +265,27 @@ class MainActivity : AppCompatActivity() {
         val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
         val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
-        val newTask : DataTask = DataTask(
-            id = -1L,
-            title = "",
-            description = "",
-            date = "",
-            status = 0
-        )
+
 
         if (id == -1L) { // новая напоминалка
 
-            newTask.title = editTextAddTaskTitle.text.toString()
-            newTask.description = editTextAddTaskMessage.text.toString()
-            newTask.date = editTextAddTaskDate.text.toString()
-
-            Log.i("Developer.BD","Бла бла бла")
+            val newTask = DataTask(
+                id = id,
+                title = editTextAddTaskTitle.text.toString(),
+                description = editTextAddTaskMessage.text.toString(),
+                date = editTextAddTaskDate.text.toString(),
+                status = 0
+            )
 
             tasks.add(newTask)
-
+            dbManager.addTask(newTask)
         } else { // редактируем напоминалку id
             for(item in tasks) {
                 if (item.id == id) {
                     item.title = editTextAddTaskTitle.text.toString()
                     item.description = editTextAddTaskMessage.text.toString()
                     item.date = editTextAddTaskDate.text.toString()
+                    dbManager.saveTask(item)
                 }
             }
         }
@@ -296,9 +294,6 @@ class MainActivity : AppCompatActivity() {
         //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
         // говорим адаптеру "обнови всё" - не рекомендуется
         rvTasks.adapter?.notifyDataSetChanged()
-
-        //dbManager.saveTasks(tasks)
-        dbManager.addTask(newTask)
 
         windowTasks.visibility = View.VISIBLE
         bottomMenu.visibility = View.VISIBLE
@@ -314,7 +309,9 @@ class MainActivity : AppCompatActivity() {
         // ищем напоминалку id
         for(item in tasks) {
             if (item.id == id) {
+                dbManager.deleteTask(item.id)
                 tasks.remove(item)
+
                 break
             }
         }

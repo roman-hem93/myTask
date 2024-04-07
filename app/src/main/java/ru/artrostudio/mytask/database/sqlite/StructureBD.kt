@@ -22,6 +22,10 @@ object StructureBD {
                 "${tableTasks.COLUMN_NAME_DATE} TEXT," +
                 "${tableTasks.COLUMN_NAME_STATUS} TEXT)"
 
+    // Суммарный запрос на создание всех таблиц (через точку с запятой)
+
+    const val SQL_CREATE_ALL_TABLE = "$SQL_CREATE_TABLE_TASKS"
+
     // системные столбцы (создаются в каждой таблице)
     object allTable {
 

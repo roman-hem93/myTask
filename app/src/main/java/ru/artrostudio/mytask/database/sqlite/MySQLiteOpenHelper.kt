@@ -6,19 +6,27 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import ru.artrostudio.mytask.DataTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 // В этом классе происходит прямое взаимодействие с БД
 // тут только самые глобальные общие методы
 // в идеале полностью абстрагироваться от текущего приложения
-class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, StructureBD.DATABASE_NAME, null, StructureBD.DATABASE_VERSION) {
+// класс работает в параллельных потоках (корутинах)
+class MySQLiteOpenHelper(context: Context, _requestCreateTables : String) : SQLiteOpenHelper(context, StructureBD.DATABASE_NAME, null, StructureBD.DATABASE_VERSION) {
+    // context - контекст
+    // _requestCreateTables - запрос на создание всех таблиц в БД
+
+    private val requestCreateTables = _requestCreateTables
 
     // Обязательный метод
     // Вызывается при первом создании базы данных
     // Здесь должно происходить создание таблиц и их первоначальное заполнение
     override fun onCreate(db: SQLiteDatabase?) {
-        db?.execSQL(StructureBD.SQL_CREATE_TABLE_TASKS)
+        db?.execSQL(requestCreateTables)
 
         Log.i("Developer.BD","Выполнился метод onCreate SQLite (создание бд)")
     }
@@ -38,26 +46,32 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
     // ниже самописные методы
 
     //ЗАПИСЬ В ТАБЛИЦУ
-    fun insert(table: String, values: ContentValues) : Long {
+    fun insert(table: String, values: ContentValues, lambdaOKforBD: (Long)-> Unit, lambdaERRORforBD: ()-> Unit) {
         // table - таблица, в которую пишем
         // values данные в виде ключ-значение
+        // lambdaOKforBD - лямбда-функция, выполняемая в случае успеха
+        // lambdaERRORforBD - лямбда-функция, выполняемая в случае ошибок
 
-        // открывает связь с БД с правами на всё
-        val db = this.writableDatabase
+        CoroutineScope(Dispatchers.IO).launch {// в потоке Dispatchers.IO выполняем тяжелую фоновую задачу
+            // открывает связь с БД с правами на всё
+            val db = this@MySQLiteOpenHelper.writableDatabase
 
-        val newRowId = db.insert(table, null, values)
+            val newRowId = db.insert(table, null, values)
 
-        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
-        db.close()
+            // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+            db.close()
 
-        Log.i("Developer.BD","Выполнена запись в  БД. Таблица: $table, id: $newRowId, данные: $values")
+            Log.i("Developer.BD","Выполнена запись в  БД. Таблица: $table, id: $newRowId, данные: $values")
 
-        // возвращаем id новой записи
-        return newRowId
+            CoroutineScope(Dispatchers.Main).launch {// после окончания тяжелой задачи выполняем в потоке Dispatchers.Main то, что взаимодействует с интерфейсом
+                // возвращаем id новой записи
+                lambdaOKforBD(newRowId)
+            }
+        }
     }
 
     //ЧТЕНИЕ ДАННЫХ
-    fun query(table: String, columns: Array<String>?, selection: String?, selectionArgs: Array<String>?, groupBy: String?, having: String?, sortOrder: String?) : ArrayList<ContentValues> {
+    fun query(table: String, columns: Array<String>?, selection: String?, selectionArgs: Array<String>?, groupBy: String?, having: String?, sortOrder: String?, lambdaOKforBD: (ArrayList<ContentValues>)-> Unit, lambdaERRORforBD: ()-> Unit) {
         // table - таблица, в которой роемся
         // columns - возвращаемые столбцы или null чтобы вернуть все (ПРИМЕР: columns = arrayOf("nameColumn", "nameColumn2") или columns = null)
         // selection - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: selection = "nameColumn = ?, nameColumn2 = ?" )
@@ -66,118 +80,151 @@ class MySQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, Structure
         // groupBy - группировка - это что такое?
         // having - фильтрация ГРУПП (т.е. работает в паре с groupBy) или null (ПРИМЕР having = "nameColumn > 5")
         // sortOrder - порядок сортировки или null (ПРИМЕР sortOrder = "nameColumn DESC")
+        // lambdaOKforBD - лямбда-функция, выполняемая в случае успеха
+        // lambdaERRORforBD - лямбда-функция, выполняемая в случае ошибок
 
-        // открывает связь с БД с правами на чтение (на практике запись и удаление тоже сработали, надо разбираться)
-        val db = this.readableDatabase
-        val cursor = db.query(table, columns, selection, selectionArgs, groupBy, having, sortOrder)
+        CoroutineScope(Dispatchers.IO).launch {// в потоке Dispatchers.IO выполняем тяжелую фоновую задачу
+            // открывает связь с БД с правами на чтение (на практике запись и удаление тоже сработали, надо разбираться)
+            val db = this@MySQLiteOpenHelper.readableDatabase
+            val cursor = db.query(table, columns, selection, selectionArgs, groupBy, having, sortOrder)
 
-        val list = ArrayList<ContentValues>()
+            val list = ArrayList<ContentValues>()
 
-        // проходимся по полученным данным
-        with(cursor) {
-            while (moveToNext()) {
-                // из результата получаем массив с названиями столбцов
-                val values = ContentValues()
+            // проходимся по полученным данным
+            with(cursor) {
+                while (moveToNext()) {
+                    // из результата получаем массив с названиями столбцов
+                    val values = ContentValues()
 
-                val columns = cursor.columnNames
+                    val columns = cursor.columnNames
 
-                // собираем всю инфу из строки
-                for (colum in columns) {
-                    values.put(colum, getString(getColumnIndexOrThrow(colum)))
+                    // собираем всю инфу из строки
+                    for (colum in columns) {
+                        values.put(colum, getString(getColumnIndexOrThrow(colum)))
+                    }
+                    list.add(values)
                 }
-                list.add(values)
+            }
+            // закрываем курсор
+            cursor.close()
+
+            // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+            db.close()
+
+            Log.i("Developer.BD","Выполнена вызгрузка из БД. Из таблицы: $table, данные: $list")
+
+            CoroutineScope(Dispatchers.Main).launch {// после окончания тяжелой задачи выполняем в потоке Dispatchers.Main то, что взаимодействует с интерфейсом
+                lambdaOKforBD(list)
             }
         }
-        // закрываем курсор
-        cursor.close()
-
-        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
-        db.close()
-
-        Log.i("Developer.BD","Выполнена вызгрузка из БД. Из таблицы: $table, данные: $list")
-
-        return list
     }
 
     // ОБНОВЛЕНИЕ ДАННЫХ
-    fun update(table: String, values: ContentValues, whereClause: String?, whereArgs: Array<String>?) : Int {
+    fun update(table: String, values: ContentValues, whereClause: String?, whereArgs: Array<String>?, lambdaOKforBD: ()-> Unit, lambdaERRORforBD: ()-> Unit) {
         // table - таблица, в которой обновляем данные
         // values -  данные в виде ключ-значение
         // whereClause - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: whereClause = "nameColumn = ?, nameColumn2 = ?" )
         // whereArgs - значения для столбцов WHERE  (ПРИМЕР whereArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в whereClause
         //             допускается не использовать whereArgs, а указать полное выражение WHERE в whereClause без знаков ?, но тогда нужно whereArgs=null
+        // lambdaOKforBD - лямбда-функция, выполняемая в случае успеха
+        // lambdaERRORforBD - лямбда-функция, выполняемая в случае ошибок
 
-        // открывает связь с БД с правами на всё
-        val db = this.writableDatabase
+        CoroutineScope(Dispatchers.IO).launch {// в потоке Dispatchers.IO выполняем тяжелую фоновую задачу
+            // открывает связь с БД с правами на всё
+            val db = this@MySQLiteOpenHelper.writableDatabase
 
-        // выполняем запрос обновления данных (возвращает количество затронутых строк)
-        val updatedRows = db.update(table, values, whereClause, whereArgs)
+            // выполняем запрос обновления данных (возвращает количество затронутых строк)
+            val updatedRows = db.update(table, values, whereClause, whereArgs)
 
-        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
-        db.close()
+            // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+            db.close()
 
-        Log.i("Developer.BD","Обновлена информация в БД. Количество затрунутых строк: $updatedRows")
+            Log.i("Developer.BD","Обновлена информация в БД. Количество затрунутых строк: $updatedRows")
 
-        return updatedRows
+            CoroutineScope(Dispatchers.Main).launch {// после окончания тяжелой задачи выполняем в потоке Dispatchers.Main то, что взаимодействует с интерфейсом
+                lambdaOKforBD()
+            }
+        }
     }
 
     // УДАЛЕНИЕ ДАННЫХ
-    fun delete(table: String, whereClause: String?, whereArgs: Array<String>?) {
+    fun delete(table: String, whereClause: String?, whereArgs: Array<String>?, lambdaOKforBD: ()-> Unit, lambdaERRORforBD: ()-> Unit) {
         // table - таблица, в которой удаляем данные
         // whereClause - столбцы, учитываемые в фильрации WHERE или null чтобы не фильтровать (ПРИМЕР: whereClause = "nameColumn = ?, nameColumn2 = ?" )
         // whereArgs - значения для столбцов WHERE  (ПРИМЕР whereArgs = arrayOf("5", "10")) // значения подставятся вместо знаков вопроса в whereClause
         //             допускается не использовать whereArgs, а указать полное выражение WHERE в whereClause без знаков ?, но тогда нужно whereArgs=null
+        // lambdaOKforBD - лямбда-функция, выполняемая в случае успеха
+        // lambdaERRORforBD - лямбда-функция, выполняемая в случае ошибок
 
-        // открывает связь с БД с правами на всё
-        val db = this.writableDatabase
+        CoroutineScope(Dispatchers.IO).launch {// в потоке Dispatchers.IO выполняем тяжелую фоновую задачу
+            // открывает связь с БД с правами на всё
+            val db = this@MySQLiteOpenHelper.writableDatabase
 
-        val deletedRows = db.delete(table, whereClause, whereArgs)
+            val deletedRows = db.delete(table, whereClause, whereArgs)
 
-        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
-        db.close()
+            // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+            db.close()
 
-        Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
+            Log.i("Developer.BD","Удалили из БД столько строк: $deletedRows")
+
+            CoroutineScope(Dispatchers.Main).launch {// после окончания тяжелой задачи выполняем в потоке Dispatchers.Main то, что взаимодействует с интерфейсом
+                lambdaOKforBD()
+            }
+        }
     }
 
     // ПЕЧАТАЕТ В ПРОТОКОЛ ТАБЛИЦУ
     fun printTable(table: String) {
         // table - таблица, которую напечатаем
 
-        // выгружаем таблицу целиком
-        val result = this.query(table, null, null, null, null, null, null)
+        val lambdaOKforBD : (ArrayList<ContentValues>)-> Unit = {result: ArrayList<ContentValues> ->
+            Log.i("Developer.BD","------------------ Начинается вавод таблицы $table")
+            var i = 0
+            for (row in result) {
+                // запрашиваем набор всех ключей в этой строке
+                val keys = row.keySet()
 
-        Log.i("Developer.BD","------------------ Начинается вавод таблицы $table")
-        var i = 0
-        for (row in result) {
-            // запрашиваем набор всех ключей в этой строке
-            val keys = row.keySet()
+                var str : String = ""
 
-            var str : String = ""
+                for (key in keys) {
+                    val value = row.getAsString(key)
+                    str = str + "$key=$value "
+                }
 
-            for (key in keys) {
-                val value = row.getAsString(key)
-                str = str + "$key=$value "
+                Log.i("Developer.BD","Строка $i: $str")
+
+                i++
             }
 
-            Log.i("Developer.BD","Строка $i: $str")
-
-            i++
+            Log.i("Developer.BD","------------------ Вывод таблицы $table окончен")
         }
+        val lambdaERRORforBD : ()-> Unit = {}
 
-        Log.i("Developer.BD","------------------ Вывод таблицы $table окончен")
+        // выгружаем таблицу целиком
+        val result = this.query(table, null, null, null, null, null, null, lambdaOKforBD, lambdaERRORforBD)
     }
 
     //ПРОИЗВОЛЬНЫЙ ЗАПРОС
-    fun requestSQL(request : String) {
-        // открывает связь с БД с правами на всё
-        val db = this.writableDatabase
+    fun requestSQL(request : String, lambdaOKforBD: ()-> Unit, lambdaERRORforBD: ()-> Unit) {
+        // request - произвольный запрос
+        // lambdaOKforBD - лямбда-функция, выполняемая в случае успеха
+        // lambdaERRORforBD - лямбда-функция, выполняемая в случае ошибок
 
-        db.execSQL(request)
+        CoroutineScope(Dispatchers.IO).launch {// в потоке Dispatchers.IO выполняем тяжелую фоновую задачу
+            // открывает связь с БД с правами на всё
+            val db = this@MySQLiteOpenHelper.writableDatabase
 
-        // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
-        db.close()
+            db.execSQL(request)
 
-        Log.i("Developer.BD","Выполнен произвольный запрос к БД")
+            // закрываем сессию общения с базой (но для полного отключения нужно закрыть экземпляр SQLiteOpenHelper)
+            db.close()
+
+            Log.i("Developer.BD","Выполнен произвольный запрос к БД")
+
+            CoroutineScope(Dispatchers.Main).launch {// после окончания тяжелой задачи выполняем в потоке Dispatchers.Main то, что взаимодействует с интерфейсом
+                lambdaOKforBD()
+            }
+        }
     }
 
 }

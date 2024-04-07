@@ -29,12 +29,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var dbManager: SQLiteManager
 
 
-    lateinit var animationAlphaIn : Animation
-    lateinit var animationAlphaOut : Animation
-    lateinit var animationCategoriesIn : Animation
-    lateinit var animationCategoriesOut : Animation
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -73,10 +67,24 @@ class MainActivity : AppCompatActivity() {
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
         dbManager = SQLiteManager(this)
-        tasks = dbManager.getTasks()
-        //tasks = ArrayList<DataTask>()
 
-        dbManager.printTableTasks()
+        val lambdaOK : (ArrayList<DataTask>) -> Unit = {result : ArrayList<DataTask> ->
+            tasks = result
+
+            // определяем и настраиваем RecyclerView
+            val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Long -> openTask(id)}, {id: Long -> setStatus(id)})
+            rvTasks.hasFixedSize()
+            rvTasks.layoutManager = LinearLayoutManager(this)
+            rvTasks.adapter = adapter
+
+            if (tasks.size == 0) {
+                // выполняем вывод инфы об отсутствии задач
+                Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
+            }
+
+        }
+        val lambdaERROR : () -> Unit = {}
+        dbManager.getTasks(lambdaOK,lambdaERROR)
 
         val notifications : MyNotifications = MyNotifications(this)
 
@@ -100,36 +108,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // определяем и настраиваем RecyclerView
-        val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Long -> openTask(id)}, {id: Long -> setStatus(id)})
-        rvTasks.hasFixedSize()
-        rvTasks.layoutManager = LinearLayoutManager(this)
-        rvTasks.adapter = adapter
-
-        if (tasks.size == 0) {
-            // выполняем вывод инфы об отсутствии задач
-            Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
-        }
 
 
         buttonTasksAdd.setOnClickListener() {
@@ -246,14 +224,22 @@ class MainActivity : AppCompatActivity() {
                 val oldSt = item.status
                 if (oldSt == 0) newStatus = 1
                 item.status = newStatus
-                dbManager.saveTask(item)
+
+                val lambdaOK : () -> Unit = {
+                    //после успешного сохранения в БД:
+
+                    // говорим адаптеру, что нужно обновить нужную вьюху
+                    //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+                    // говорим адаптеру "обнови всё" - не рекомендуется
+                    rvTasks.adapter?.notifyDataSetChanged()
+                }
+                val lambdaERROR : () -> Unit = {}
+
+                dbManager.saveTask(item, lambdaOK, lambdaERROR)
+
+                break
             }
         }
-
-        // говорим адаптеру, что нужно обновить нужную вьюху
-        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
-        // говорим адаптеру "обнови всё" - не рекомендуется
-        rvTasks.adapter?.notifyDataSetChanged()
     }
 
 
@@ -277,27 +263,54 @@ class MainActivity : AppCompatActivity() {
                 status = 0
             )
 
-            tasks.add(newTask)
-            dbManager.addTask(newTask)
+            val lambdaOK : (Long) -> Unit = {newId : Long ->
+                //после успешного сохранения в БД:
+
+                //присваиваем новый id
+                newTask.id = newId
+
+                // добавляем эту задачу в память
+                tasks.add(newTask)
+
+                // говорим адаптеру, что нужно обновить нужную вьюху
+                //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+                // говорим адаптеру "обнови всё" - не рекомендуется
+                rvTasks.adapter?.notifyDataSetChanged()
+
+                windowTasks.visibility = View.VISIBLE
+                bottomMenu.visibility = View.VISIBLE
+                windowAddTask.visibility = View.GONE
+            }
+            val lambdaERROR : () -> Unit = {}
+
+            dbManager.addTask(newTask, lambdaOK, lambdaERROR)
         } else { // редактируем напоминалку id
             for(item in tasks) {
                 if (item.id == id) {
                     item.title = editTextAddTaskTitle.text.toString()
                     item.description = editTextAddTaskMessage.text.toString()
                     item.date = editTextAddTaskDate.text.toString()
-                    dbManager.saveTask(item)
+
+                    val lambdaOK : () -> Unit = {
+                        //после успешного сохранения в БД:
+
+                        // говорим адаптеру, что нужно обновить нужную вьюху
+                        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+                        // говорим адаптеру "обнови всё" - не рекомендуется
+                        rvTasks.adapter?.notifyDataSetChanged()
+
+                        windowTasks.visibility = View.VISIBLE
+                        bottomMenu.visibility = View.VISIBLE
+                        windowAddTask.visibility = View.GONE
+                    }
+                    val lambdaERROR : () -> Unit = {}
+
+                    dbManager.saveTask(item, lambdaOK, lambdaERROR)
+
+                    break
                 }
             }
         }
-
-        // говорим адаптеру, что нужно обновить нужную вьюху
-        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
-        // говорим адаптеру "обнови всё" - не рекомендуется
-        rvTasks.adapter?.notifyDataSetChanged()
-
-        windowTasks.visibility = View.VISIBLE
-        bottomMenu.visibility = View.VISIBLE
-        windowAddTask.visibility = View.GONE
     }
 
     fun deleteTask(id: Long) {
@@ -309,39 +322,32 @@ class MainActivity : AppCompatActivity() {
         // ищем напоминалку id
         for(item in tasks) {
             if (item.id == id) {
-                dbManager.deleteTask(item.id)
-                tasks.remove(item)
+
+                val lambdaOK : () -> Unit = {
+                    tasks.remove(item)
+
+                    // говорим адаптеру, что нужно обновить нужную вьюху
+                    //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
+                    // говорим адаптеру "обнови всё" - не рекомендуется
+                    rvTasks.adapter?.notifyDataSetChanged()
+
+                    //dbManager.saveTasks(tasks)
+
+                    windowTasks.visibility = View.VISIBLE
+                    bottomMenu.visibility = View.VISIBLE
+                    windowAddTask.visibility = View.GONE
+                }
+                val lambdaERROR : () -> Unit = {}
+
+                dbManager.deleteTask(item.id, lambdaOK, lambdaERROR)
 
                 break
             }
         }
-
-        // говорим адаптеру, что нужно обновить нужную вьюху
-        //rvTasks.adapter?.notifyItemInserted(tasks.size-1)
-        // говорим адаптеру "обнови всё" - не рекомендуется
-        rvTasks.adapter?.notifyDataSetChanged()
-
-        //dbManager.saveTasks(tasks)
-
-        windowTasks.visibility = View.VISIBLE
-        bottomMenu.visibility = View.VISIBLE
-        windowAddTask.visibility = View.GONE
     }
 
     fun myAlert(text : String) {
         Toast.makeText(this, text,Toast.LENGTH_SHORT).show()
-    }
-
-    suspend fun test1(a : Int, b: Int) : Int {
-        delay(10000L)
-        val c = a + b
-        Log.i("Developer.test","Результат: $c")
-
-        return c
-    }
-    fun test2() {
-        Log.i("Developer.test","Выполнилась лямбда")
-        Toast.makeText(this, "Выполнилась лямбда",Toast.LENGTH_SHORT).show()
     }
 
 

@@ -8,14 +8,26 @@
 
 
     <include
-        android:id="@+id/windowTasks"
-        layout="@layout/window_tasks_list"
+        android:id="@+id/windowStartLoading"
+        layout="@layout/window_start_loading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        android:id="@+id/windowTasks"
+        layout="@layout/window_tasks_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone" />
 
     <include
         android:id="@+id/windowAddTask"

@@ -1,7 +1,6 @@
-package ru.artrostudio.mytask
+package ru.artrostudio.mytask.view
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +8,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import ru.artrostudio.mytask.DataTask
+import ru.artrostudio.mytask.R
 
 class TasksRecyclerViewAdapter(_context: Context, _array: ArrayList<DataTask>, _funOpenTask: (Long) -> Unit, _funSetStatus: (Long) -> Unit) : RecyclerView.Adapter<TasksRecyclerViewAdapter.ViewHolder>() {
 

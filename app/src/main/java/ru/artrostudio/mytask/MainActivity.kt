@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.animation.Animation
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
@@ -16,17 +15,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.delay
-import ru.artrostudio.mytask.database.sqlite.MySQLiteOpenHelper
+import ru.artrostudio.mytask.controller.ControllerTasks
+import ru.artrostudio.mytask.controller.Controllers
 import ru.artrostudio.mytask.database.sqlite.SQLiteManager
 import ru.artrostudio.mytask.modules.MyAnimation
 import ru.artrostudio.mytask.modules.MyNotifications
+import ru.artrostudio.mytask.view.TasksRecyclerViewAdapter
+import ru.artrostudio.mytask.view.WindowsDirector
 
 class MainActivity : AppCompatActivity() {
 
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
     lateinit var dbManager: SQLiteManager
+    lateinit var windowsDirector: WindowsDirector
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +36,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         Log.i("Developer.System","Приложение запустилось")
+
+        windowsDirector = WindowsDirector(this)
+
+        // инициализируем все контроллеры
+        val controllers = Controllers(this)
+
+
 
         //окна
         //context = this
@@ -63,6 +72,9 @@ class MainActivity : AppCompatActivity() {
         val buttonTasksDate : Button = findViewById(R.id.tasksDate)
         val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
         val buttonCatigoriesTasksItem : ImageView = findViewById(R.id.buttonCatigoriesTasksItem)
+
+
+        windowsDirector.WindowTasks().open()
 
         val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
 
@@ -107,23 +119,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
-
-        buttonTasksAdd.setOnClickListener() {
-            editTextAddTaskDate.setText("")
-            editTextAddTaskTitle.setText("")
-            editTextAddTaskMessage.setText("")
-
-            buttonAddTaskSave.setOnClickListener() {
-                saveTask(-1)
-            }
-            buttonAddTaskDelete.visibility = View.GONE
-
-            windowAddTask.visibility = View.VISIBLE
-            windowTasks.visibility = View.GONE
-            bottomMenu.visibility = View.GONE
-        }
 
 
         buttonAddTaskCancel.setOnClickListener() {

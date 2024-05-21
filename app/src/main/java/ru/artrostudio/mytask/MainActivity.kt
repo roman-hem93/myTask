@@ -44,35 +44,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        //окна
-        //context = this
-        val windowTasks : ConstraintLayout = findViewById(R.id.windowTasks)
-        val windowAddTask : ConstraintLayout = findViewById(R.id.windowAddTask)
-        val windowSetDate : ConstraintLayout = findViewById(R.id.windowSetDate)
-        val windowSetTime : ConstraintLayout = findViewById(R.id.windowSetTime)
-        val windowSetting : ConstraintLayout = findViewById(R.id.windowSetting)
-        val windowCategories : ConstraintLayout = findViewById(R.id.windowCategories)
-        val bottomMenu : ConstraintLayout = findViewById(R.id.bottomMenu)
-        val windowGrayBackground : ConstraintLayout = findViewById(R.id.windowGreyBackground)
-
-
-        //val ltCategoriesList : ConstraintLayout = findViewById(R.id.ltCategoriesList)
-
-        val editTextAddTaskDate : EditText = findViewById(R.id.addTaskDate)
-        val editTextAddTaskTitle : EditText = findViewById(R.id.addTaskTitle)
-        val editTextAddTaskMessage : EditText = findViewById(R.id.addTaskMessage)
-
-        val buttonTasksAdd : Button = findViewById(R.id.tasksAdd)
-        val buttonAddTaskSave : Button = findViewById(R.id.addTaskSave)
-        val buttonAddTaskDelete : Button = findViewById(R.id.addTaskDelete)
-        val buttonAddTaskCancel : Button = findViewById(R.id.addTaskCancel)
-        val buttonSetDateCancel : Button = findViewById(R.id.setDateCancel)
-        val buttonSetDateSetTime : Button = findViewById(R.id.setDateSetTime)
-        val buttonSetTimeCancel : Button = findViewById(R.id.setTimeCancel)
-        val buttonTasksDate : Button = findViewById(R.id.tasksDate)
-        val buttonTasksNotification : Button = findViewById(R.id.tasksNotification)
-        val buttonCatigoriesTasksItem : ImageView = findViewById(R.id.buttonCatigoriesTasksItem)
-
 
         windowsDirector.WindowTasks().open()
 
@@ -97,75 +68,6 @@ class MainActivity : AppCompatActivity() {
         }
         val lambdaERROR : () -> Unit = {}
         dbManager.getTasks(lambdaOK,lambdaERROR)
-
-        val notifications : MyNotifications = MyNotifications(this)
-
-        buttonCatigoriesTasksItem.setOnClickListener() {
-            windowCategories.visibility = View.VISIBLE
-            windowGrayBackground.visibility = View.VISIBLE
-            windowGrayBackground.alpha = 0f // задаю тут, т.к. объект include в xml не поддерживает свойство alpa
-            MyAnimation.start(windowCategories, MyAnimation.ATTRIBUTE_X, false, 9999f, 0f,120L, MyAnimation.TYPE_EVENLY)
-            MyAnimation.start(windowGrayBackground, MyAnimation.ATTRIBUTE_ALPHA, false, 9999f, 1f,120L, MyAnimation.TYPE_EVENLY)
-        }
-
-        windowGrayBackground.setOnClickListener() {
-            MyAnimation.start(windowCategories, MyAnimation.ATTRIBUTE_X, false, 9999f, -windowCategories.width.toFloat(),120L, MyAnimation.TYPE_EVENLY, {windowCategories.visibility = View.GONE})
-            MyAnimation.start(windowGrayBackground, MyAnimation.ATTRIBUTE_ALPHA, false, 9999f, 0f,120L, MyAnimation.TYPE_EVENLY,{windowGrayBackground.visibility = View.GONE})
-        }
-
-        windowCategories.setOnClickListener() {
-            myAlert("Тест")
-        }
-
-
-
-
-
-        buttonAddTaskCancel.setOnClickListener() {
-            windowTasks.visibility = View.VISIBLE
-            bottomMenu.visibility = View.VISIBLE
-            windowAddTask.visibility = View.GONE
-        }
-
-
-        buttonSetDateCancel.setOnClickListener() {
-            windowTasks.visibility = View.VISIBLE
-            bottomMenu.visibility = View.VISIBLE
-            windowSetDate.visibility = View.GONE
-        }
-
-
-        buttonSetDateSetTime.setOnClickListener() {
-            windowSetTime.visibility = View.VISIBLE
-            windowSetDate.visibility = View.GONE
-        }
-
-
-        buttonSetTimeCancel.setOnClickListener() {
-            windowSetDate.visibility = View.VISIBLE
-            windowSetTime.visibility = View.GONE
-        }
-
-
-        buttonTasksDate.setOnClickListener() {
-            val dateView = findViewById<DatePicker>(R.id.datePicker)
-            val timeView = findViewById<TimePicker>(R.id.timePicker)
-
-            timeView.setIs24HourView(true)
-            //dateView.
-            //dateView.month =
-            //dateView.year =
-
-            windowTasks.visibility = View.GONE
-            bottomMenu.visibility = View.GONE
-            windowSetDate.visibility = View.VISIBLE
-        }
-
-
-        buttonTasksNotification.setOnClickListener() {
-            notifications.setNotification()
-            Toast.makeText(this, "Уведомление создано",Toast.LENGTH_LONG).show()
-        }
 
 
     }

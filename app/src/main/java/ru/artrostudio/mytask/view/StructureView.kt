@@ -2,8 +2,10 @@ package ru.artrostudio.mytask.view
 
 import android.content.Context
 import android.widget.Button
+import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TimePicker
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -78,12 +80,19 @@ class StructureView(activity: AppCompatActivity) {
         //кнопки
         val btCancel : Button = window.findViewById(R.id.setDateCancel)
         val btTime : Button = window.findViewById(R.id.setDateSetTime)
+
+        // выбор даты
+        val dateView = window.findViewById<DatePicker>(R.id.datePicker)
+
     }
 
     // список идентификаторов интерфейса окна SetTime
     class SetTime(window : ConstraintLayout) {
         //кнопки
         val btCancel : Button = window.findViewById(R.id.setTimeCancel)
+
+        // выбор времени
+        val timeView = window.findViewById<TimePicker>(R.id.timePicker)
     }
 
     // список идентификаторов интерфейса окна Setting

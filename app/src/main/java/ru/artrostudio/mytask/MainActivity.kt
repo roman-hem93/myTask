@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     //lateinit var context: MainActivity
     lateinit var tasks: ArrayList<DataTask>
     lateinit var dbManager: SQLiteManager
-    lateinit var windowsDirector: WindowsDirector
+    //lateinit var windowsDirector: WindowsDirector
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.i("Developer.System","Приложение запустилось")
 
-        windowsDirector = WindowsDirector(this)
+        //windowsDirector = WindowsDirector(this)  // ЭТО ЛИШНЯЯ КОПИЯ, нужно избавиться !!!!! ВиндовсДиректор создаётся в контроллерах
 
         // инициализируем все контроллеры
         val controllers = Controllers(this)
@@ -45,28 +45,9 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        windowsDirector.WindowTasks().open()
-
-        val rvTasks : RecyclerView = findViewById(R.id.tasksRV)
+        //windowsDirector.WindowTasks().open()
 
         dbManager = SQLiteManager(this)
-
-        val lambdaOK : (ArrayList<DataTask>) -> Unit = {result : ArrayList<DataTask> ->
-            tasks = result
-
-            // определяем и настраиваем RecyclerView
-            val adapter = TasksRecyclerViewAdapter(this as Context, tasks, {id: Long -> openTask(id)}, {id: Long -> setStatus(id)})
-            rvTasks.hasFixedSize()
-            rvTasks.layoutManager = LinearLayoutManager(this)
-            rvTasks.adapter = adapter
-
-            if (tasks.size == 0) {
-                // выполняем вывод инфы об отсутствии задач
-                Toast.makeText(this, "Нет задач",Toast.LENGTH_LONG).show()
-            }
-
-        }
-        val lambdaERROR : () -> Unit = {}
         dbManager.getTasks(lambdaOK,lambdaERROR)
 
 

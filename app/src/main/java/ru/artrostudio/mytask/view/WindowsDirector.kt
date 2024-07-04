@@ -8,10 +8,18 @@ import ru.artrostudio.mytask.modules.MyAnimation
 
 // ПОКА это класс, который переключает окна
 // НО в дальнейшем может перерасти в центральный класс взаимодействия с пользователем
-class WindowsDirector(activity : AppCompatActivity) {
+class WindowsDirector(val activity : AppCompatActivity, val structureView : StructureView) {
 
-    private val structureView = StructureView(activity)
+    //private val structureView = StructureView(activity)   // Дубль!! Нужно это побороть всё же
     private var closeCurrentWindow : ()->Unit = {this.WindowStartLoading().close()}
+
+    init {
+        //при инициализации выполняем переключение окна загрузки на главную страницу
+        WindowTasks().open()
+
+        //инициализируем классы всех вьюх
+        val viewWindowTasks = ViewWindowTasks(activity, structureView)
+    }
 
 
     inner class WindowStartLoading : ItemWindowDirector {

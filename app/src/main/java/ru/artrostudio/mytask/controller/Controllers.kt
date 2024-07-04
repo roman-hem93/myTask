@@ -9,8 +9,9 @@ class Controllers(private val activity: AppCompatActivity) {
 
 
     init {
-        val windowsDirector = WindowsDirector(activity)
+
         val structureView = StructureView(activity)
+        val windowsDirector = WindowsDirector(activity, structureView)
 
 
 
